@@ -9,10 +9,25 @@ export default function CoveyMatrix() {
     const [editingTask, setEditingTask] = useState(null); // For editing logic if needed
 
     // Filtering Logic
-    const q1 = tasks.filter(t => t.urge && t.imp && t.status !== 'done');
-    const q2 = tasks.filter(t => !t.urge && t.imp && t.status !== 'done');
-    const q3 = tasks.filter(t => t.urge && !t.imp && t.status !== 'done');
-    const q4 = tasks.filter(t => !t.urge && !t.imp && t.status !== 'done');
+    // Show tasks if:
+    // 1. Not archived
+    // 2. AND (Status is 'todo' OR (Status is 'done' AND completed less than 24h ago))
+
+    const isVisible = (t) => {
+        if (t.isArchived) return false;
+        if (t.status !== 'done') return true;
+        // If done, check if within 24h
+        const ONE_DAY = 24 * 60 * 60 * 1000;
+        const completeTime = new Date(t.completedAt).getTime();
+        return (Date.now() - completeTime) < ONE_DAY;
+    };
+
+    const visibleTasks = tasks.filter(isVisible);
+
+    const q1 = visibleTasks.filter(t => t.urge && t.imp);
+    const q2 = visibleTasks.filter(t => !t.urge && t.imp);
+    const q3 = visibleTasks.filter(t => t.urge && !t.imp);
+    const q4 = visibleTasks.filter(t => !t.urge && !t.imp);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
@@ -27,9 +42,9 @@ export default function CoveyMatrix() {
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 gridTemplateRows: '1fr 1fr',
-                gap: '1rem',
+                gap: '0.75rem',
                 flex: 1,
-                minHeight: '600px'
+                minHeight: 0, // Critical for nested flex scrolling
             }}>
                 <Quadrant title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" />
                 <Quadrant title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" />

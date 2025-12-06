@@ -1,13 +1,18 @@
 import React from 'react';
-import { CheckCircle, Circle, Clock, Tag } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Tag, Archive } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 
-export default function TaskCard({ task, onClick }) {
-    const { toggleTaskStatus } = useTasks();
+export default function TaskCard({ task, onClick, compact = false }) {
+    const { toggleTaskStatus, deleteTask } = useTasks();
 
     const handleToggle = (e) => {
         e.stopPropagation();
         toggleTaskStatus(task.id);
+    };
+
+    const handleArchive = (e) => {
+        e.stopPropagation();
+        deleteTask(task.id); // calls archiveTask under the hood now
     };
 
     const isDone = task.status === 'done';
@@ -17,51 +22,68 @@ export default function TaskCard({ task, onClick }) {
             onClick={onClick}
             className="glass-panel"
             style={{
-                padding: '1rem',
+                padding: compact ? '0.5rem' : '0.75rem',
                 borderRadius: 'var(--radius-md)',
-                marginBottom: '0.75rem',
+                marginBottom: compact ? '0' : '0.5rem',
                 cursor: 'pointer',
                 display: 'flex',
-                gap: '0.75rem',
-                alignItems: 'flex-start',
+                gap: compact ? '0.5rem' : '0.75rem',
+                alignItems: 'center',
                 borderLeft: `3px solid ${getPriorityColor(task)}`,
-                opacity: isDone ? 0.6 : 1,
-                transition: 'transform 0.1s'
+                opacity: isDone ? 0.5 : 1,
+                transition: 'all 0.2s',
+                filter: isDone ? 'grayscale(0.5)' : 'none',
+                position: 'relative',
+                height: compact ? '100%' : 'auto'
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
             <button
                 onClick={handleToggle}
-                style={{ background: 'none', border: 'none', color: isDone ? 'var(--color-success)' : 'var(--color-text-muted)', cursor: 'pointer', padding: 0 }}
+                style={{ background: 'none', border: 'none', color: isDone ? 'var(--color-success)' : 'var(--color-text-muted)', cursor: 'pointer', padding: 0, display: 'flex' }}
             >
-                {isDone ? <CheckCircle size={20} /> : <Circle size={20} />}
+                {isDone ? <CheckCircle size={compact ? 16 : 18} /> : <Circle size={compact ? 16 : 18} />}
             </button>
 
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
                 <h4 style={{
-                    fontSize: '0.95rem',
-                    marginBottom: '0.25rem',
+                    fontSize: isDone ? '0.8rem' : (compact ? '0.8rem' : '0.9rem'),
+                    marginBottom: compact ? 0 : '0.2rem',
                     fontWeight: 500,
                     textDecoration: isDone ? 'line-through' : 'none',
-                    color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-main)'
+                    color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-main)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    lineHeight: compact ? '1.2' : 'normal'
                 }}>
                     {task.title}
                 </h4>
 
-                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                    {task.dueDate && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Clock size={12} /> {new Date(task.dueDate).toLocaleDateString()}
-                        </span>
-                    )}
-                    {task.context && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Tag size={12} /> {task.context}
-                        </span>
-                    )}
-                </div>
+                {!compact && (
+                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                        {task.dueDate && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Clock size={10} /> {task.dueDate.slice(5)}
+                            </span>
+                        )}
+                        {task.context && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Tag size={10} /> {task.context}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
+
+            {isDone && (
+                <button
+                    onClick={handleArchive}
+                    title="Archive"
+                    style={{ border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem' }}
+                >
+                    <Archive size={16} />
+                </button>
+            )}
         </div>
     );
 }

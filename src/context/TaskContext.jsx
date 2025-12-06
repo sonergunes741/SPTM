@@ -32,14 +32,27 @@ export function TaskProvider({ children }) {
     const toggleTaskStatus = (id) => {
         setTasks(prev => prev.map(t => {
             if (t.id === id) {
-                return { ...t, status: t.status === 'done' ? 'todo' : 'done' };
+                const isNowDone = t.status !== 'done';
+                return {
+                    ...t,
+                    status: isNowDone ? 'done' : 'todo',
+                    completedAt: isNowDone ? new Date().toISOString() : null
+                };
             }
             return t;
         }));
     };
 
+    const archiveTask = (id) => {
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, isArchived: true } : t));
+    };
+
+    const deletePermanently = (id) => {
+        setTasks(prev => prev.filter(t => t.id !== id));
+    };
+
     return (
-        <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask, toggleTaskStatus }}>
+        <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask: archiveTask, deletePermanently, toggleTaskStatus }}>
             {children}
         </TaskContext.Provider>
     );

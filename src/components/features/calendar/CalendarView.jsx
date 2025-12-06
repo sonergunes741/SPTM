@@ -32,7 +32,12 @@ export default function CalendarView() {
 
     const getTasksForDate = (day) => {
         if (!day) return [];
-        const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0];
+        // Construct YYYY-MM-DD manually to match input[type="date"] format (which is just a string)
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const dateStr = `${year}-${month}-${dayStr}`;
+
         return tasks.filter(t => t.dueDate === dateStr);
     };
 
