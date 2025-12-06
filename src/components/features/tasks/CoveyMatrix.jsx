@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 import TaskCard from './TaskCard';
+import TaskDetailModal from './TaskDetailModal';
 import { Plus, X, LayoutGrid, List } from 'lucide-react';
 
 export default function CoveyMatrix() {
     const { tasks, addTask } = useTasks();
     const [showForm, setShowForm] = useState(false);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+    const [selectedTask, setSelectedTask] = useState(null);
 
     // Filtering Logic
     // Show tasks if:
@@ -16,6 +18,7 @@ export default function CoveyMatrix() {
 
     const isVisible = (t) => {
         if (t.isArchived) return false;
+        if (t.isInbox) return false; // Don't show inbox items in matrix
         if (t.status !== 'done') return true;
         // If done, check if within 24h
         const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -63,20 +66,27 @@ export default function CoveyMatrix() {
                 gap: '0.75rem',
                 alignContent: 'start' // Don't stretch rows unnecessarily, let content dictate
             }}>
-                <Quadrant title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} />
-                <Quadrant title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" viewMode={viewMode} />
-                <Quadrant title="Q3: Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} />
-                <Quadrant title="Q4: Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} />
+                <Quadrant title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant title="Q3: Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant title="Q4: Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} onTaskClick={setSelectedTask} />
             </div>
 
             {showForm && (
                 <TaskModal onClose={() => setShowForm(false)} onSave={addTask} />
             )}
+
+            {selectedTask && (
+                <TaskDetailModal
+                    task={selectedTask}
+                    onClose={() => setSelectedTask(null)}
+                />
+            )}
         </div>
     );
 }
 
-function Quadrant({ title, tasks, color, viewMode }) {
+function Quadrant({ title, tasks, color, viewMode, onTaskClick }) {
     return (
         <div className="glass-panel" style={{
             borderRadius: 'var(--radius-lg)',
@@ -99,7 +109,7 @@ function Quadrant({ title, tasks, color, viewMode }) {
                 gap: '0.5rem',
                 alignContent: 'start'
             }}>
-                {tasks.map(t => <TaskCard key={t.id} task={t} compact={viewMode === 'grid'} />)}
+                {tasks.map(t => <TaskCard key={t.id} task={t} compact={viewMode === 'grid'} onClick={() => onTaskClick(t)} />)}
                 {tasks.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>Empty</div>}
             </div>
         </div>
@@ -205,16 +215,19 @@ function TaskModal({ onClose, onSave }) {
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Context</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Context (GTD)</label>
                             <select
                                 style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                                 value={form.context}
                                 onChange={e => setForm({ ...form, context: e.target.value })}
                             >
-                                <option value="@home">@home</option>
-                                <option value="@work">@work</option>
-                                <option value="@errands">@errands</option>
-                                <option value="@computer">@computer</option>
+                                <option value="@home">🏠 @home</option>
+                                <option value="@work">💼 @work</option>
+                                <option value="@computer">💻 @computer</option>
+                                <option value="@phone">📱 @phone</option>
+                                <option value="@errands">🚗 @errands</option>
+                                <option value="@waiting">⏳ @waiting</option>
+                                <option value="@anywhere">🌍 @anywhere</option>
                             </select>
                         </div>
                     </div>

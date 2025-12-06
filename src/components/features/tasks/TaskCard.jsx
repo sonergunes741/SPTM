@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Circle, Clock, Tag, Archive, Target } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Tag, Archive, Target, ListChecks } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 
@@ -87,6 +87,15 @@ export default function TaskCard({ task, onClick, compact = false }) {
                                 borderRadius: '4px'
                             }}>
                                 <Target size={10} /> {linkedItem.text.slice(0, 15)}{linkedItem.text.length > 15 ? '...' : ''}
+                            </span>
+                        )}
+                        {task.subtasks && task.subtasks.length > 0 && (
+                            <span style={{
+                                display: 'flex', alignItems: 'center', gap: '0.3rem',
+                                color: task.subtasks.filter(s => s.completed).length === task.subtasks.length ? '#10b981' : 'var(--color-text-muted)'
+                            }}>
+                                <ListChecks size={10} />
+                                {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}
                             </span>
                         )}
                     </div>

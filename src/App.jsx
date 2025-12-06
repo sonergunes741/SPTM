@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LayoutDashboard, Target, Calendar as CalendarIcon, PieChart, Archive } from 'lucide-react'
+import { LayoutDashboard, Target, Calendar as CalendarIcon, PieChart, Archive, Inbox, RefreshCcw } from 'lucide-react'
 import MissionView from './components/features/mission/MissionView'
 import CoveyMatrix from './components/features/tasks/CoveyMatrix'
 import MissionWidget from './components/features/mission/MissionWidget'
@@ -7,6 +7,9 @@ import CalendarView from './components/features/calendar/CalendarView'
 import StatsView from './components/features/stats/StatsView'
 import ArchivedTasksView from './components/features/tasks/ArchivedTasksView'
 import LevelWidget from './components/features/gamification/LevelWidget'
+import InboxWidget from './components/features/inbox/InboxWidget'
+import WeeklyReview from './components/features/review/WeeklyReview'
+import NotificationsWidget from './components/features/notifications/NotificationsWidget'
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -53,6 +56,15 @@ function App() {
             icon={<Archive size={20} />}
             label="Archive"
           />
+
+          <div style={{ marginTop: '2rem', marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>GTD Tools</div>
+
+          <NavButton
+            active={activeTab === 'review'}
+            onClick={() => setActiveTab('review')}
+            icon={<RefreshCcw size={20} />}
+            label="Weekly Review"
+          />
         </nav>
       </aside>
 
@@ -73,11 +85,16 @@ function App() {
 
         <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ textTransform: 'capitalize' }}>{activeTab === 'archive' ? 'Archived Tasks' : activeTab}</h2>
+            <h2 style={{ textTransform: 'capitalize' }}>{activeTab === 'archive' ? 'Archived Tasks' : (activeTab === 'review' ? 'Weekly Review' : activeTab)}</h2>
             <p style={{ color: 'var(--color-text-muted)' }}>Manage your day with purpose.</p>
           </div>
-          <div className="glass-panel" style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-xl)', fontSize: '0.875rem' }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ position: 'relative' }}>
+              <NotificationsWidget />
+            </div>
+            <div className="glass-panel" style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-xl)', fontSize: '0.875rem' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </div>
           </div>
         </header>
 
@@ -85,8 +102,9 @@ function App() {
         <div className="content-area">
           {activeTab === 'dashboard' && (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 <LevelWidget />
+                <InboxWidget />
                 <MissionWidget />
               </div>
               <div style={{ flex: 1 }}>
@@ -98,6 +116,7 @@ function App() {
           {activeTab === 'calendar' && <CalendarView />}
           {activeTab === 'stats' && <StatsView />}
           {activeTab === 'archive' && <ArchivedTasksView />}
+          {activeTab === 'review' && <WeeklyReview />}
         </div>
       </main>
     </div>
