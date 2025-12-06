@@ -107,7 +107,7 @@ function Quadrant({ title, tasks, color, viewMode }) {
 }
 
 function TaskModal({ onClose, onSave }) {
-    const { visions = [], values = [] } = useMission(); // Get Compass items
+    const { visions = [], values = [], missions = [] } = useMission(); // Get Compass items
     const [form, setForm] = useState({
         title: '',
         urge: false,
@@ -167,8 +167,22 @@ function TaskModal({ onClose, onSave }) {
                             onChange={e => setForm({ ...form, missionId: e.target.value })}
                         >
                             <option value="">-- No specific Link --</option>
-                            {(visions.length > 0 || values.length > 0) ? (
+                            {(visions.length > 0 || values.length > 0 || missions.length > 0) ? (
                                 <>
+                                    <optgroup label="Roles & Key Areas">
+                                        {/* Flatten missions for dropdown - focusing on leaf nodes (Roles) mainly, but let's show all for flexibility */}
+                                        {missions.map(m => (
+                                            <React.Fragment key={m.id}>
+                                                <option value={m.id}>🎯 {m.text}</option>
+                                                {/* If we had a flat list of sub-missions we could map them here, but getSubMissions is a function. 
+                                                    Ideally we'd flatten this outside render or use a helper. 
+                                                    For now, let's just stick to top-level missions + one level deep if needed, 
+                                                    but getRootMissions vs missions... 'missions' contains ALL missions (root + subs) in the context?
+                                                    Check MissionContext. missions is the state array containing ALL items.
+                                                */}
+                                            </React.Fragment>
+                                        ))}
+                                    </optgroup>
                                     <optgroup label="Long-Term Vision">
                                         {visions.map(v => <option key={v.id} value={v.id}>👁 {v.text}</option>)}
                                     </optgroup>
