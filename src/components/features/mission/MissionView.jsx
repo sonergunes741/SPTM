@@ -171,6 +171,8 @@ function MissionCard({ mission, isRoot }) {
     const { updateMission, deleteMission, addMission, getSubMissions } = useMission();
     const { tasks } = useTasks();
     const [isEditing, setIsEditing] = useState(false);
+    const [isAddingChild, setIsAddingChild] = useState(false);
+    const [newRoleText, setNewRoleText] = useState('');
     const [editText, setEditText] = useState(mission.text);
     const subMissions = getSubMissions(mission.id);
 
@@ -180,8 +182,11 @@ function MissionCard({ mission, isRoot }) {
     };
 
     const handleAddChild = () => {
-        const text = prompt("Enter a Role or Focus Area (e.g., 'Student', 'Father', 'Health'):");
-        if (text) addMission(text, mission.id);
+        if (newRoleText.trim()) {
+            addMission(newRoleText, mission.id);
+            setNewRoleText('');
+            setIsAddingChild(false);
+        }
     };
 
     // Progress for this specific mission node
