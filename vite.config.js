@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/sptm/', // Base path for GitHub Pages (assuming repo name is 'sptm')
+  base: '/SPTM/', // Base path for GitHub Pages matching Repo Name 'SPTM'
 })
