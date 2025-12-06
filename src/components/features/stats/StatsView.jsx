@@ -1,10 +1,12 @@
 import React from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
+import { useGamification } from '../../../context/GamificationContext';
 
 export default function StatsView() {
     const { tasks } = useTasks();
     const { missions } = useMission();
+    const { history } = useGamification();
 
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'done').length;
@@ -29,7 +31,7 @@ export default function StatsView() {
                 <StatCard title="Missions Active" value={missions.length} color="var(--color-text-main)" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
                 <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
                     <h4 style={{ marginBottom: '1.5rem' }}>Task Context Distribution</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -59,6 +61,23 @@ export default function StatsView() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* XP History Log */}
+            <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <h4 style={{ marginBottom: '1.5rem' }}>Recent Achievements</h4>
+                {history.length === 0 ? (
+                    <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No achievements recorded yet. Complete tasks to gain XP!</div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {history.map(entry => (
+                            <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+                                <span>{entry.source}</span>
+                                <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>+{entry.amount} XP</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
