@@ -14,7 +14,7 @@ function App() {
     <div className="app-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Sidebar Navigation */}
       <aside className="glass-panel" style={{ width: '280px', padding: '2rem', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-        <div style={{ marginBottom: '3rem' }}>
+        <div style={{ marginBottom: '3rem', cursor: 'pointer' }} onClick={() => setActiveTab('dashboard')}>
           <h1 style={{ fontSize: '1.5rem', background: 'linear-gradient(135deg, var(--color-primary) 0%, #fff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             SPTM
           </h1>
