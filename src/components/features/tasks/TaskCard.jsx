@@ -78,6 +78,7 @@ export default function TaskCard({ task, onClick, compact = false }) {
             {isDone && (
                 <button
                     onClick={handleArchive}
+                    className="btn-archive"
                     title="Archive"
                     style={{ border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem' }}
                 >
