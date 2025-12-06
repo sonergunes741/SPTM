@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import TaskCard from './TaskCard';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, LayoutGrid, List } from 'lucide-react';
 
 export default function CoveyMatrix() {
     const { tasks, addTask } = useTasks();
     const [showForm, setShowForm] = useState(false);
-    const [editingTask, setEditingTask] = useState(null); // For editing logic if needed
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     // Filtering Logic
     // Show tasks if:
@@ -32,7 +32,25 @@ export default function CoveyMatrix() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3>Priorities Matrix</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h3>Priorities Matrix</h3>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: 'var(--radius-md)', display: 'flex' }}>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', display: 'flex' }}
+                            title="List View"
+                        >
+                            <List size={16} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', display: 'flex' }}
+                            title="Grid View"
+                        >
+                            <LayoutGrid size={16} />
+                        </button>
+                    </div>
+                </div>
                 <button className="btn btn-primary" onClick={() => setShowForm(true)}>
                     <Plus size={18} /> New Task
                 </button>
@@ -41,15 +59,13 @@ export default function CoveyMatrix() {
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gridTemplateRows: '1fr 1fr',
                 gap: '0.75rem',
-                flex: 1,
-                minHeight: 0, // Critical for nested flex scrolling
+                alignContent: 'start' // Don't stretch rows unnecessarily, let content dictate
             }}>
-                <Quadrant title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" />
-                <Quadrant title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" />
-                <Quadrant title="Q3: Urgent & Not Important" tasks={q3} color="var(--color-warning)" />
-                <Quadrant title="Q4: Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" />
+                <Quadrant title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} />
+                <Quadrant title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" viewMode={viewMode} />
+                <Quadrant title="Q3: Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} />
+                <Quadrant title="Q4: Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} />
             </div>
 
             {showForm && (
@@ -59,19 +75,31 @@ export default function CoveyMatrix() {
     );
 }
 
-function Quadrant({ title, tasks, color }) {
+function Quadrant({ title, tasks, color, viewMode }) {
     return (
         <div className="glass-panel" style={{
             borderRadius: 'var(--radius-lg)',
             padding: '1rem',
             display: 'flex',
             flexDirection: 'column',
-            borderTop: `4px solid ${color}`
+            borderTop: `4px solid ${color}`,
+            transition: 'all 0.3s ease'
         }}>
             <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>{title} <span style={{ opacity: 0.5 }}>({tasks.length})</span></h4>
-            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.25rem' }}>
-                {tasks.map(t => <TaskCard key={t.id} task={t} />)}
-                {tasks.length === 0 && <div style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>Empty</div>}
+            <div style={{
+                overflowY: 'auto',
+                paddingRight: '0.25rem',
+                // base height ~ 2 items, max height ~ 3 items (approx)
+                minHeight: '160px',
+                maxHeight: '260px',
+                display: viewMode === 'grid' ? 'grid' : 'flex',
+                flexDirection: viewMode === 'list' ? 'column' : undefined,
+                gridTemplateColumns: viewMode === 'grid' ? 'repeat(3, 1fr)' : undefined,
+                gap: '0.5rem',
+                alignContent: 'start'
+            }}>
+                {tasks.map(t => <TaskCard key={t.id} task={t} compact={viewMode === 'grid'} />)}
+                {tasks.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>Empty</div>}
             </div>
         </div>
     );
