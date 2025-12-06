@@ -1,10 +1,12 @@
 import React, { createContext, useContext } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useGamification } from './GamificationContext';
 
 const TaskContext = createContext();
 
 export function TaskProvider({ children }) {
     const [tasks, setTasks] = useLocalStorage('sptm_tasks', []);
+    const { gainXp } = useGamification();
 
     // Task Model: 
     // id, title, description, missionId, status (todo, in-progress, done), 
@@ -33,6 +35,13 @@ export function TaskProvider({ children }) {
         setTasks(prev => prev.map(t => {
             if (t.id === id) {
                 const isNowDone = t.status !== 'done';
+
+                // Award XP if completing
+                if (isNowDone) {
+                    // Simple logic: 10 XP per task. Could scale with importance later.
+                    gainXp(10, `Completed task: ${t.title}`);
+                }
+
                 return {
                     ...t,
                     status: isNowDone ? 'done' : 'todo',

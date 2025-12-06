@@ -6,6 +6,7 @@ import MissionWidget from './components/features/mission/MissionWidget'
 import CalendarView from './components/features/calendar/CalendarView'
 import StatsView from './components/features/stats/StatsView'
 import ArchivedTasksView from './components/features/tasks/ArchivedTasksView'
+import LevelWidget from './components/features/gamification/LevelWidget'
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -84,7 +85,10 @@ function App() {
         <div className="content-area">
           {activeTab === 'dashboard' && (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <MissionWidget />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <LevelWidget />
+                <MissionWidget />
+              </div>
               <div style={{ flex: 1 }}>
                 <CoveyMatrix />
               </div>
