@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
 import MissionWizard from './MissionWizard';
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Compass, Target, Heart } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart } from 'lucide-react';
 
 export default function MissionView() {
-    const { missions, addMission, vision, setVision, values, setValues, getRootMissions, getSubMissions } = useMission();
+    const {
+        missions = [], addMission,
+        visions = [], addVision, updateVision, deleteVision,
+        values = [], addValue, updateValue, deleteValue,
+        getRootMissions
+    } = useMission();
+
+    // Safety check for array methods
+    const safeVisions = Array.isArray(visions) ? visions : [];
+    const safeValues = Array.isArray(values) ? values : [];
+
     const rootMissions = getRootMissions();
 
     // If no data at all, show wizard
-    const hasData = rootMissions.length > 0 || vision || values;
+    const hasData = rootMissions.length > 0 || safeVisions.length > 0 || safeValues.length > 0;
 
     if (!hasData) {
         return <MissionWizard onComplete={() => { }} />;
@@ -20,23 +30,27 @@ export default function MissionView() {
             {/* Compass Section: Values & Vision */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 {/* Core Values */}
-                <EditableSection
+                <ListSection
                     title="Core Values"
                     icon={<Heart size={18} className="text-primary" />}
-                    content={values}
-                    onSave={setValues}
-                    placeholder="Define your core principles..."
-                    minHeight="150px"
+                    items={safeValues}
+                    onAdd={addValue}
+                    onUpdate={updateValue}
+                    onDelete={deleteValue}
+                    placeholder="Add a core value..."
+                    emptyMessage="What principles guide you?"
                 />
 
                 {/* Vision */}
-                <EditableSection
+                <ListSection
                     title="Long-term Vision"
                     icon={<Compass size={18} className="text-primary" />}
-                    content={vision}
-                    onSave={setVision}
-                    placeholder="Where are you going?"
-                    minHeight="150px"
+                    items={safeVisions}
+                    onAdd={addVision}
+                    onUpdate={updateVision}
+                    onDelete={deleteVision}
+                    placeholder="Add a vision statement..."
+                    emptyMessage="Where do you see yourself?"
                 />
             </div>
 
@@ -55,65 +69,97 @@ export default function MissionView() {
                     ))
                 )}
             </section>
-
-            {/* Key Roles / Goals Section (Handled within MissionCard hierarchy mainly) */}
         </div>
     );
 }
 
-function EditableSection({ title, icon, content, onSave, placeholder, minHeight }) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [tempContent, setTempContent] = useState(content);
+function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, placeholder, emptyMessage }) {
+    const [isAdding, setIsAdding] = useState(false);
+    const [newItemText, setNewItemText] = useState('');
 
-    const handleSave = () => {
-        onSave(tempContent);
-        setIsEditing(false);
+    const handleAdd = () => {
+        if (newItemText.trim()) {
+            onAdd(newItemText);
+            setNewItemText('');
+            setIsAdding(false);
+        }
     };
 
     return (
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column' }}>
+        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
                     {icon} {title}
                 </h3>
-                {!isEditing && (
-                    <button className="btn btn-ghost" onClick={() => { setTempContent(content); setIsEditing(true); }} size="sm">
-                        <Edit2 size={14} />
-                    </button>
-                )}
+                <button className="btn btn-ghost" onClick={() => setIsAdding(true)} size="sm" title="Add Item">
+                    <Plus size={16} />
+                </button>
             </div>
 
-            {isEditing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '0.5rem' }}>
-                    <textarea
-                        value={tempContent}
-                        onChange={e => setTempContent(e.target.value)}
-                        placeholder={placeholder}
-                        style={{
-                            flex: 1,
-                            minHeight: minHeight,
-                            background: 'rgba(0,0,0,0.2)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: 'var(--radius-md)',
-                            padding: '0.75rem',
-                            color: 'white',
-                            resize: 'vertical'
-                        }}
-                    />
-                    <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'flex-end' }}>
-                        <button className="btn btn-ghost" style={{ color: 'var(--color-danger)' }} onClick={() => { if (window.confirm('Clear section?')) { onSave(''); setTempContent(''); setIsEditing(false); } }} title="Clear Section">
-                            <Trash2 size={16} />
-                        </button>
-                        <div style={{ flex: 1 }}></div>
-                        <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Cancel</button>
-                        <button className="btn btn-primary" onClick={handleSave}>Save</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {items.length === 0 && !isAdding && (
+                    <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                        {emptyMessage}
                     </div>
-                </div>
-            ) : (
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: content ? 'var(--color-text-main)' : 'var(--color-text-muted)', fontStyle: content ? 'normal' : 'italic' }}>
-                    {content || placeholder}
-                </div>
-            )}
+                )}
+
+                {items.map(item => (
+                    <ListItem key={item.id} item={item} onUpdate={onUpdate} onDelete={onDelete} />
+                ))}
+
+                {isAdding && (
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input
+                            autoFocus
+                            type="text"
+                            value={newItemText}
+                            onChange={e => setNewItemText(e.target.value)}
+                            placeholder={placeholder}
+                            style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                        />
+                        <button className="btn btn-ghost success" onClick={handleAdd}><Check size={16} /></button>
+                        <button className="btn btn-ghost danger" onClick={() => setIsAdding(false)}><X size={16} /></button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ListItem({ item, onUpdate, onDelete }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [text, setText] = useState(item.text);
+
+    const handleSave = () => {
+        onUpdate(item.id, text);
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                    autoFocus
+                    type="text"
+                    value={text}
+                    onChange={e => setText(e.target.value)}
+                    style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                    onKeyDown={e => e.key === 'Enter' && handleSave()}
+                />
+                <button className="btn btn-ghost success" onClick={handleSave}><Check size={16} /></button>
+                <button className="btn btn-ghost danger" onClick={() => setIsEditing(false)}><X size={16} /></button>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+            <span style={{ flex: 1, marginRight: '0.5rem' }}>{item.text}</span>
+            <div style={{ display: 'flex', opacity: 0.7 }}>
+                <button className="btn btn-ghost" onClick={() => setIsEditing(true)} style={{ padding: '0.25rem' }}><Edit2 size={14} /></button>
+                <button className="btn btn-ghost" onClick={() => onDelete(item.id)} style={{ padding: '0.25rem', color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
+            </div>
         </div>
     );
 }
@@ -122,7 +168,6 @@ function MissionCard({ mission, isRoot }) {
     const { updateMission, deleteMission, addMission, getSubMissions } = useMission();
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(mission.text);
-    const [isExpanded, setIsExpanded] = useState(true);
     const subMissions = getSubMissions(mission.id);
 
     const handleSave = () => {

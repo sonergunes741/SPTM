@@ -5,17 +5,18 @@ const MissionContext = createContext();
 
 export function MissionProvider({ children }) {
     const [missions, setMissions] = useLocalStorage('sptm_missions', []);
-    const [vision, setVision] = useLocalStorage('sptm_vision', '');
-    const [values, setValues] = useLocalStorage('sptm_values', ''); // Stored as plain text for flexibility
+    const [visions, setVisions] = useLocalStorage('sptm_visions', []); // Array of {id, text, linkedMissionIds}
+    const [values, setValues] = useLocalStorage('sptm_core_values', []); // Array of {id, text}
 
+    // --- Missions ---
     const addMission = (text, parentId = null) => {
         const newMission = {
             id: crypto.randomUUID(),
             text,
-            parentId, // For hierarchy (sub-missions)
+            parentId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            versions: [] // For history
+            versions: []
         };
         setMissions(prev => [...prev, newMission]);
         return newMission;
@@ -36,18 +37,41 @@ export function MissionProvider({ children }) {
     };
 
     const deleteMission = (id) => {
-        // Also likely need to delete children or reassign them, for now simple delete
         setMissions(prev => prev.filter(m => m.id !== id));
     };
 
     const getRootMissions = () => missions.filter(m => !m.parentId);
     const getSubMissions = (parentId) => missions.filter(m => m.parentId === parentId);
 
+    // --- Visions ---
+    const addVision = (text) => {
+        const newVision = { id: crypto.randomUUID(), text };
+        setVisions(prev => [...prev, newVision]);
+    };
+    const updateVision = (id, text) => {
+        setVisions(prev => prev.map(v => v.id === id ? { ...v, text } : v));
+    };
+    const deleteVision = (id) => {
+        setVisions(prev => prev.filter(v => v.id !== id));
+    };
+
+    // --- Values ---
+    const addValue = (text) => {
+        const newValue = { id: crypto.randomUUID(), text };
+        setValues(prev => [...prev, newValue]);
+    };
+    const updateValue = (id, text) => {
+        setValues(prev => prev.map(v => v.id === id ? { ...v, text } : v));
+    };
+    const deleteValue = (id) => {
+        setValues(prev => prev.filter(v => v.id !== id));
+    };
+
     return (
         <MissionContext.Provider value={{
             missions, addMission, updateMission, deleteMission, getRootMissions, getSubMissions,
-            vision, setVision,
-            values, setValues
+            visions, addVision, updateVision, deleteVision,
+            values, addValue, updateValue, deleteValue
         }}>
             {children}
         </MissionContext.Provider>

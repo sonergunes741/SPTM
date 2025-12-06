@@ -3,14 +3,15 @@ import { useMission } from '../../../context/MissionContext';
 import { Target, Compass, Heart } from 'lucide-react';
 
 export default function MissionWidget() {
-    const { getRootMissions, vision, values } = useMission();
+    const { getRootMissions, visions = [], values = [] } = useMission();
     const rootMissions = getRootMissions();
     const mission = rootMissions.length > 0 ? rootMissions[0]?.text : '';
 
     const [activeTab, setActiveTab] = useState('mission');
 
     // If nothing defined, show placeholder
-    if (!mission && !vision && !values) return (
+    const hasData = mission || visions.length > 0 || values.length > 0;
+    if (!hasData) return (
         <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-lg)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px dashed rgba(255,255,255,0.2)' }}>
             <Target className="text-muted" />
             <span style={{ color: 'var(--color-text-muted)' }}>You haven't defined your compass yet. Go to "My Mission" to start.</span>
@@ -22,9 +23,21 @@ export default function MissionWidget() {
             case 'mission':
                 return mission ? `"${mission}"` : <span className="text-muted italic">No mission statement defined.</span>;
             case 'vision':
-                return vision ? vision : <span className="text-muted italic">No vision defined.</span>;
+                return visions.length > 0 ? (
+                    <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
+                        {visions.map(v => <li key={v.id}>{v.text}</li>)}
+                    </ul>
+                ) : <span className="text-muted italic">No vision defined.</span>;
             case 'values':
-                return values ? values : <span className="text-muted italic">No core values defined.</span>;
+                return values.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {values.map(v => (
+                            <span key={v.id} style={{ background: 'rgba(236, 72, 153, 0.2)', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.9rem', color: '#fbcfe8' }}>
+                                {v.text}
+                            </span>
+                        ))}
+                    </div>
+                ) : <span className="text-muted italic">No core values defined.</span>;
             default:
                 return null;
         }
