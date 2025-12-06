@@ -118,3 +118,13 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+.btn-archive {
+    transition: all 0.2s ease;
+    border-radius: var(--radius-sm);
+}
+
+.btn-archive:hover {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: var(--color-success) !important;
+}
