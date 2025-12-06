@@ -1,0 +1,50 @@
+:root {
+  /* HSL Color Tokens for easier theming */
+  /* Primary Brand - Vibrant Blue/Purple */
+  --primary-hue: 250;
+  --primary-sat: 95%;
+  --primary-light: 60%;
+  --color-primary: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
+  --color-primary-hover: hsl(var(--primary-hue), var(--primary-sat), 50%);
+  
+  /* Deep Navy Backgrounds (Dark Mode Default) */
+  --bg-hue: 222;
+  --bg-sat: 47%;
+  --bg-darkest: 11%;  /* #0f172a */
+  --bg-darker: 15%;   /* #1e293b */
+  --bg-dark: 20%;     /* #334155 */
+  
+  --color-bg-app: hsl(var(--bg-hue), var(--bg-sat), var(--bg-darkest));
+  --color-bg-surface: hsl(var(--bg-hue), var(--bg-sat), var(--bg-darker));
+  --color-bg-surface-hover: hsl(var(--bg-hue), var(--bg-sat), 25%);
+  
+  /* Text */
+  --color-text-main: hsl(210, 40%, 98%);
+  --color-text-muted: hsl(215, 20%, 65%);
+  --color-text-inverted: hsl(222, 47%, 11%);
+
+  /* UI Status */
+  --color-success: hsl(150, 60%, 45%);
+  --color-warning: hsl(35, 90%, 55%);
+  --color-danger: hsl(0, 75%, 60%);
+
+  /* Variables */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+/* Optional Light Mode Overrides (if we implement toggle later) */
+.light-mode {
+  --color-bg-app: hsl(210, 40%, 98%);
+  --color-bg-surface: hsl(0, 0%, 100%);
+  --color-text-main: hsl(222, 47%, 11%);
+  --color-text-muted: hsl(215, 16%, 47%);
+}
