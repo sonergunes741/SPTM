@@ -1,37 +1,115 @@
 import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
 import MissionWizard from './MissionWizard';
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Compass, Target, Heart } from 'lucide-react';
 
 export default function MissionView() {
-    const { missions, addMission, updateMission, deleteMission, getRootMissions, getSubMissions } = useMission();
+    const { missions, addMission, vision, setVision, values, setValues, getRootMissions, getSubMissions } = useMission();
     const rootMissions = getRootMissions();
-    const hasMission = rootMissions.length > 0;
 
-    if (!hasMission) {
+    // If no data at all, show wizard
+    const hasData = rootMissions.length > 0 || vision || values;
+
+    if (!hasData) {
         return <MissionWizard onComplete={() => { }} />;
     }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-            {/* Primary Mission Statement */}
+
+            {/* Compass Section: Values & Vision */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                {/* Core Values */}
+                <EditableSection
+                    title="Core Values"
+                    icon={<Heart size={18} className="text-primary" />}
+                    content={values}
+                    onSave={setValues}
+                    placeholder="Define your core principles..."
+                    minHeight="150px"
+                />
+
+                {/* Vision */}
+                <EditableSection
+                    title="Long-term Vision"
+                    icon={<Compass size={18} className="text-primary" />}
+                    content={vision}
+                    onSave={setVision}
+                    placeholder="Where are you going?"
+                    minHeight="150px"
+                />
+            </div>
+
+            {/* Mission Statement */}
             <section>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Personal Compass</h3>
-                {rootMissions.map(mission => (
-                    <MissionCard key={mission.id} mission={mission} isRoot />
-                ))}
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+                    <Target size={16} /> Personal Mission
+                </h3>
+                {rootMissions.length === 0 ? (
+                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
+                        <button className="btn btn-primary" onClick={() => addMission('My Mission is...')}>Create Mission Statement</button>
+                    </div>
+                ) : (
+                    rootMissions.map(mission => (
+                        <MissionCard key={mission.id} mission={mission} isRoot />
+                    ))
+                )}
             </section>
 
-            {/* Sub-Missions / Roles */}
-            <section>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <h3 style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Key Roles & Focus Areas</h3>
+            {/* Key Roles / Goals Section (Handled within MissionCard hierarchy mainly) */}
+        </div>
+    );
+}
+
+function EditableSection({ title, icon, content, onSave, placeholder, minHeight }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempContent, setTempContent] = useState(content);
+
+    const handleSave = () => {
+        onSave(tempContent);
+        setIsEditing(false);
+    };
+
+    return (
+        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                    {icon} {title}
+                </h3>
+                {!isEditing && (
+                    <button className="btn btn-ghost" onClick={() => { setTempContent(content); setIsEditing(true); }} size="sm">
+                        <Edit2 size={14} />
+                    </button>
+                )}
+            </div>
+
+            {isEditing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '0.5rem' }}>
+                    <textarea
+                        value={tempContent}
+                        onChange={e => setTempContent(e.target.value)}
+                        placeholder={placeholder}
+                        style={{
+                            flex: 1,
+                            minHeight: minHeight,
+                            background: 'rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '0.75rem',
+                            color: 'white',
+                            resize: 'vertical'
+                        }}
+                    />
+                    <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'flex-end' }}>
+                        <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Cancel</button>
+                        <button className="btn btn-primary" onClick={handleSave}>Save</button>
+                    </div>
                 </div>
-                {/* We generally expect key roles to be children of the main mission in a strict hierarchy, 
-            but for flexibility, we might just allow adding top level items or children. 
-            For this MVP, let's assume one ONE main mission, and others are children.
-        */}
-            </section>
+            ) : (
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: content ? 'var(--color-text-main)' : 'var(--color-text-muted)', fontStyle: content ? 'normal' : 'italic' }}>
+                    {content || placeholder}
+                </div>
+            )}
         </div>
     );
 }
@@ -101,7 +179,7 @@ function MissionCard({ mission, isRoot }) {
                 <div style={{ marginTop: '1.5rem', paddingLeft: '1rem' }}>
                     {isRoot && subMissions.length === 0 && (
                         <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                            No roles or sub-goals defined yet. Break down your mission!
+                            Break down your mission into specific roles or key areas.
                         </div>
                     )}
                     {subMissions.map(sub => (

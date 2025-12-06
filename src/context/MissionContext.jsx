@@ -5,6 +5,8 @@ const MissionContext = createContext();
 
 export function MissionProvider({ children }) {
     const [missions, setMissions] = useLocalStorage('sptm_missions', []);
+    const [vision, setVision] = useLocalStorage('sptm_vision', '');
+    const [values, setValues] = useLocalStorage('sptm_values', ''); // Stored as plain text for flexibility
 
     const addMission = (text, parentId = null) => {
         const newMission = {
@@ -42,7 +44,11 @@ export function MissionProvider({ children }) {
     const getSubMissions = (parentId) => missions.filter(m => m.parentId === parentId);
 
     return (
-        <MissionContext.Provider value={{ missions, addMission, updateMission, deleteMission, getRootMissions, getSubMissions }}>
+        <MissionContext.Provider value={{
+            missions, addMission, updateMission, deleteMission, getRootMissions, getSubMissions,
+            vision, setVision,
+            values, setValues
+        }}>
             {children}
         </MissionContext.Provider>
     );

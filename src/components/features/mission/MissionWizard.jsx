@@ -3,14 +3,18 @@ import { useMission } from '../../../context/MissionContext';
 import { ArrowRight, Check, Sparkles } from 'lucide-react';
 
 export default function MissionWizard({ onComplete }) {
-    const { addMission } = useMission();
+    const { addMission, setVision, setValues } = useMission();
     const [step, setStep] = useState(1);
     const [data, setData] = useState({ values: '', vision: '', statement: '' });
 
     const handleNext = () => setStep(s => s + 1);
 
     const handleFinish = () => {
-        // Combine inputs if statement is empty, or just use statement
+        // Save specific components
+        setVision(data.vision);
+        setValues(data.values);
+
+        // Combine inputs if statement is empty, otherwise use the drafted statement
         const finalStatement = data.statement || `My mission is to live by my values of ${data.values} and achieve ${data.vision}.`;
         addMission(finalStatement);
         onComplete();
