@@ -276,12 +276,28 @@ function MissionCard({ mission, isRoot }) {
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Roles & Key Areas</h4>
-                    <button className="btn btn-ghost" onClick={handleAddChild} style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <button className="btn btn-ghost" onClick={() => setIsAddingChild(true)} style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Plus size={16} /> Add Role
                     </button>
                 </div>
 
-                {subMissions.length === 0 ? (
+                {isAddingChild && (
+                    <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                        <input
+                            autoFocus
+                            type="text"
+                            value={newRoleText}
+                            onChange={e => setNewRoleText(e.target.value)}
+                            placeholder="Enter Role Name (e.g. Senior Developer)"
+                            style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                            onKeyDown={e => e.key === 'Enter' && handleAddChild()}
+                        />
+                        <button className="btn btn-primary" onClick={handleAddChild}>Add</button>
+                        <button className="btn btn-ghost" onClick={() => setIsAddingChild(false)}>Cancel</button>
+                    </div>
+                )}
+
+                {subMissions.length === 0 && !isAddingChild ? (
                     <div style={{
                         padding: '2rem',
                         border: '2px dashed rgba(255,255,255,0.1)',
@@ -291,7 +307,7 @@ function MissionCard({ mission, isRoot }) {
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                     }}
-                        onClick={handleAddChild}
+                        onClick={() => setIsAddingChild(true)}
                         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                         onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
                     >
