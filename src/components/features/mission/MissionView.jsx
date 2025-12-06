@@ -101,6 +101,10 @@ function EditableSection({ title, icon, content, onSave, placeholder, minHeight 
                         }}
                     />
                     <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'flex-end' }}>
+                        <button className="btn btn-ghost" style={{ color: 'var(--color-danger)' }} onClick={() => { if (window.confirm('Clear section?')) { onSave(''); setTempContent(''); setIsEditing(false); } }} title="Clear Section">
+                            <Trash2 size={16} />
+                        </button>
+                        <div style={{ flex: 1 }}></div>
                         <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Cancel</button>
                         <button className="btn btn-primary" onClick={handleSave}>Save</button>
                     </div>
