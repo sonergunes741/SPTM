@@ -1,9 +1,11 @@
 import React from 'react';
-import { CheckCircle, Circle, Clock, Tag, Archive } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Tag, Archive, Target } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
+import { useMission } from '../../../context/MissionContext';
 
 export default function TaskCard({ task, onClick, compact = false }) {
     const { toggleTaskStatus, deleteTask } = useTasks();
+    const { visions = [], values = [] } = useMission();
 
     const handleToggle = (e) => {
         e.stopPropagation();
@@ -12,10 +14,15 @@ export default function TaskCard({ task, onClick, compact = false }) {
 
     const handleArchive = (e) => {
         e.stopPropagation();
-        deleteTask(task.id); // calls archiveTask under the hood now
+        deleteTask(task.id);
     };
 
     const isDone = task.status === 'done';
+
+    // Find linked compass item
+    const linkedItem = task.missionId
+        ? [...visions, ...values].find(i => i.id === task.missionId)
+        : null;
 
     return (
         <div
@@ -60,7 +67,7 @@ export default function TaskCard({ task, onClick, compact = false }) {
                 </h4>
 
                 {!compact && (
-                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                         {task.dueDate && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                                 <Clock size={10} /> {task.dueDate.slice(5)}
@@ -69,6 +76,17 @@ export default function TaskCard({ task, onClick, compact = false }) {
                         {task.context && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                                 <Tag size={10} /> {task.context}
+                            </span>
+                        )}
+                        {linkedItem && (
+                            <span style={{
+                                display: 'flex', alignItems: 'center', gap: '0.2rem',
+                                color: 'var(--color-primary)',
+                                background: 'rgba(99, 102, 241, 0.1)',
+                                padding: '0 4px',
+                                borderRadius: '4px'
+                            }}>
+                                <Target size={10} /> {linkedItem.text.slice(0, 15)}{linkedItem.text.length > 15 ? '...' : ''}
                             </span>
                         )}
                     </div>

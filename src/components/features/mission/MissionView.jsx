@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
+import { useTasks } from '../../../context/TaskContext';
 import MissionWizard from './MissionWizard';
 import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart } from 'lucide-react';
 
@@ -53,6 +54,8 @@ export default function MissionView() {
                     emptyMessage="Where do you see yourself?"
                 />
             </div>
+
+            <MissionProgressSection values={safeValues} visions={safeVisions} />
 
             {/* Mission Statement */}
             <section>
@@ -237,5 +240,54 @@ function MissionCard({ mission, isRoot }) {
                 </div>
             )}
         </div>
+    );
+}
+
+function MissionProgressSection({ values, visions }) {
+    const { tasks } = useTasks();
+
+    const renderProgress = (item) => {
+        const linkedTasks = tasks.filter(t => t.missionId === item.id);
+        const total = linkedTasks.length;
+        const completed = linkedTasks.filter(t => t.status === 'done').length;
+        const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        if (total === 0) return null;
+
+        return (
+            <div key={item.id} style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                    <span>{item.text}</span>
+                    <span style={{ color: 'var(--color-text-muted)' }}>{completed}/{total}</span>
+                </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: 'var(--color-primary)', transition: 'width 0.5s' }} />
+                </div>
+            </div>
+        );
+    };
+
+    const hasAnyProgress = [...values, ...visions].some(i => tasks.some(t => t.missionId === i.id));
+
+    if (!hasAnyProgress) return null;
+
+    return (
+        <section className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                <Target size={18} className="text-primary" /> Active Pursuit
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div>
+                    <h4 style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Values in Action</h4>
+                    {values.map(renderProgress)}
+                    {values.every(v => !tasks.some(t => t.missionId === v.id)) && <div className="text-muted italic" style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>No tasks linked to values yet.</div>}
+                </div>
+                <div>
+                    <h4 style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Vision Progress</h4>
+                    {visions.map(renderProgress)}
+                    {visions.every(v => !tasks.some(t => t.missionId === v.id)) && <div className="text-muted italic" style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>No tasks linked to vision yet.</div>}
+                </div>
+            </div>
+        </section>
     );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTasks } from '../../../context/TaskContext';
+import { useMission } from '../../../context/MissionContext';
 import TaskCard from './TaskCard';
 import { Plus, X, LayoutGrid, List } from 'lucide-react';
 
@@ -106,12 +107,14 @@ function Quadrant({ title, tasks, color, viewMode }) {
 }
 
 function TaskModal({ onClose, onSave }) {
+    const { visions = [], values = [] } = useMission(); // Get Compass items
     const [form, setForm] = useState({
         title: '',
         urge: false,
         imp: false,
         dueDate: '',
-        context: '@home'
+        context: '@home',
+        missionId: '' // New Linking Field
     });
 
     const handleSubmit = (e) => {
@@ -126,7 +129,7 @@ function TaskModal({ onClose, onSave }) {
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
         }}>
-            <div className="glass-panel" style={{ width: '400px', padding: '2rem', borderRadius: 'var(--radius-lg)', background: '#1e293b' }}>
+            <div className="glass-panel" style={{ width: '450px', padding: '2rem', borderRadius: 'var(--radius-lg)', background: '#1e293b' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                     <h3>Add New Task</h3>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
@@ -153,6 +156,28 @@ function TaskModal({ onClose, onSave }) {
                             <input type="checkbox" checked={form.imp} onChange={e => setForm({ ...form, imp: e.target.checked })} style={{ display: 'none' }} />
                             Important ⭐
                         </label>
+                    </div>
+
+                    {/* Linking Section */}
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Link to Mission (Why?)</label>
+                        <select
+                            style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                            value={form.missionId}
+                            onChange={e => setForm({ ...form, missionId: e.target.value })}
+                        >
+                            <option value="">-- No specific Link --</option>
+                            {(visions.length > 0 || values.length > 0) ? (
+                                <>
+                                    <optgroup label="Long-Term Vision">
+                                        {visions.map(v => <option key={v.id} value={v.id}>👁 {v.text}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Core Values">
+                                        {values.map(v => <option key={v.id} value={v.id}>❤️ {v.text}</option>)}
+                                    </optgroup>
+                                </>
+                            ) : <option disabled>No Compass defined yet</option>}
+                        </select>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
