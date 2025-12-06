@@ -1,11 +1,11 @@
-
 import { useState } from 'react'
-import { LayoutDashboard, Target, Calendar as CalendarIcon, PieChart } from 'lucide-react'
+import { LayoutDashboard, Target, Calendar as CalendarIcon, PieChart, Archive } from 'lucide-react'
 import MissionView from './components/features/mission/MissionView'
 import CoveyMatrix from './components/features/tasks/CoveyMatrix'
 import MissionWidget from './components/features/mission/MissionWidget'
 import CalendarView from './components/features/calendar/CalendarView'
 import StatsView from './components/features/stats/StatsView'
+import ArchivedTasksView from './components/features/tasks/ArchivedTasksView'
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -46,6 +46,12 @@ function App() {
             icon={<PieChart size={20} />}
             label="Insights"
           />
+          <NavButton
+            active={activeTab === 'archive'}
+            onClick={() => setActiveTab('archive')}
+            icon={<Archive size={20} />}
+            label="Archive"
+          />
         </nav>
       </aside>
 
@@ -66,7 +72,7 @@ function App() {
 
         <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ textTransform: 'capitalize' }}>{activeTab}</h2>
+            <h2 style={{ textTransform: 'capitalize' }}>{activeTab === 'archive' ? 'Archived Tasks' : activeTab}</h2>
             <p style={{ color: 'var(--color-text-muted)' }}>Manage your day with purpose.</p>
           </div>
           <div className="glass-panel" style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-xl)', fontSize: '0.875rem' }}>
@@ -87,6 +93,7 @@ function App() {
           {activeTab === 'mission' && <MissionView />}
           {activeTab === 'calendar' && <CalendarView />}
           {activeTab === 'stats' && <StatsView />}
+          {activeTab === 'archive' && <ArchivedTasksView />}
         </div>
       </main>
     </div>

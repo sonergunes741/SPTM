@@ -51,8 +51,21 @@ export function TaskProvider({ children }) {
         setTasks(prev => prev.filter(t => t.id !== id));
     };
 
+    const unarchiveTask = (id) => {
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, isArchived: false } : t));
+    };
+
     return (
-        <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask: archiveTask, deletePermanently, toggleTaskStatus }}>
+        <TaskContext.Provider value={{
+            tasks,
+            addTask,
+            updateTask,
+            deleteTask: archiveTask, // Aliased for existing UI
+            archiveTask,             // Explicit access
+            unarchiveTask,
+            deletePermanently,
+            toggleTaskStatus
+        }}>
             {children}
         </TaskContext.Provider>
     );
