@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTasks } from "../../../context/TaskContext";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import TaskCard from "../tasks/TaskCard";
 import GoogleCalendarSync from "./GoogleCalendarSync";
 
@@ -79,18 +79,49 @@ export default function CalendarView() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "1rem",
+          marginBottom: "1.5rem",
+          paddingBottom: "1rem",
+          borderBottom: "1px solid rgba(255,255,255,0.05)"
         }}
       >
-        <h3 style={{ fontSize: "1.5rem" }}>
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h3>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="btn btn-ghost" onClick={handlePrevMonth}>
-            <ChevronLeft />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.1))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid rgba(56, 189, 248, 0.2)',
+                boxShadow: '0 4px 12px rgba(56, 189, 248, 0.1)'
+            }}>
+                <Calendar size={24} style={{ color: '#bae6fd' }} />
+            </div>
+            <div>
+                <h3 className="text-gradient-primary" style={{ fontSize: "1.75rem", margin: 0, lineHeight: 1 }}>
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h3>
+                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0 0' }}>Manage your schedule and tasks.</p>
+            </div>
+        </div>
+        
+        <div style={{ display: "flex", gap: "0.5rem", background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <button 
+            className="btn btn-ghost" 
+            onClick={handlePrevMonth}
+            style={{ borderRadius: '6px', width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Previous Month"
+          >
+            <ChevronLeft size={20} />
           </button>
-          <button className="btn btn-ghost" onClick={handleNextMonth}>
-            <ChevronRight />
+          <button 
+            className="btn btn-ghost" 
+            onClick={handleNextMonth}
+            style={{ borderRadius: '6px', width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Next Month"
+          >
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
@@ -136,24 +167,46 @@ export default function CalendarView() {
           >
             {day && (
               <>
-                <span
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    color:
-                      day === new Date().getDate() &&
-                      currentDate.getMonth() === new Date().getMonth()
-                        ? "var(--color-primary)"
-                        : "inherit",
-                    fontWeight:
-                      day === new Date().getDate() &&
-                      currentDate.getMonth() === new Date().getMonth()
-                        ? "bold"
-                        : "normal",
-                  }}
-                >
-                  {day}
-                </span>
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start',
+                    marginBottom: '0.5rem'
+                }}>
+                    <span
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background:
+                        day === new Date().getDate() &&
+                        currentDate.getMonth() === new Date().getMonth() &&
+                        currentDate.getFullYear() === new Date().getFullYear()
+                            ? "var(--color-primary)"
+                            : "transparent",
+                        color:
+                        day === new Date().getDate() &&
+                        currentDate.getMonth() === new Date().getMonth() &&
+                        currentDate.getFullYear() === new Date().getFullYear()
+                            ? "white"
+                            : "inherit",
+                        fontWeight:
+                        day === new Date().getDate() &&
+                        currentDate.getMonth() === new Date().getMonth() &&
+                        currentDate.getFullYear() === new Date().getFullYear()
+                            ? "bold"
+                            : "normal",
+                        boxShadow: day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear()
+                            ? "0 0 10px var(--color-primary-glow)" 
+                            : 'none'
+                    }}
+                    >
+                    {day}
+                    </span>
+                </div>
 
                 <div
                   style={{

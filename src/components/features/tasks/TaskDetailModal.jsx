@@ -3,11 +3,11 @@ import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 import {
     X, CheckCircle2, Circle, Plus, Trash2, Clock, Tag, Target,
-    ListChecks, Edit2, Save, Calendar
+    ListChecks, Edit2, Save, Calendar, Archive
 } from 'lucide-react';
 
 export default function TaskDetailModal({ task, onClose }) {
-    const { updateTask, deleteTask } = useTasks();
+    const { updateTask, deleteTask, deletePermanently, toggleTimer } = useTasks();
     const { visions = [], values = [], missions = [] } = useMission();
 
     const [editMode, setEditMode] = useState(false);
@@ -22,6 +22,35 @@ export default function TaskDetailModal({ task, onClose }) {
         subtasks: task.subtasks || []
     });
     const [newSubtask, setNewSubtask] = useState('');
+
+    // Timer Logic
+    const [elapsed, setElapsed] = useState(task.timeSpent || 0);
+    const isRunning = !!task.timerStartedAt;
+
+    useEffect(() => {
+        let interval;
+        if (isRunning) {
+            const start = new Date(task.timerStartedAt).getTime();
+            // Upkeep live display
+            setElapsed((task.timeSpent || 0) + (Date.now() - start));
+            
+            interval = setInterval(() => {
+                setElapsed((task.timeSpent || 0) + (Date.now() - start));
+            }, 1000);
+        } else {
+            setElapsed(task.timeSpent || 0);
+        }
+        return () => clearInterval(interval);
+    }, [task.timeSpent, task.timerStartedAt, isRunning]);
+
+    const formatDuration = (ms) => {
+        if (!ms) return "0m";
+        const seconds = Math.floor((ms / 1000) % 60);
+        const minutes = Math.floor((ms / (1000 * 60)) % 60);
+        const hours = Math.floor((ms / (1000 * 60 * 60)));
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m ${seconds}s`;
+    };
 
     useEffect(() => {
         setForm({
@@ -165,6 +194,27 @@ export default function TaskDetailModal({ task, onClose }) {
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {/* Timer Control */}
+                         <button 
+                            onClick={() => toggleTimer(task.id)} 
+                            className="btn btn-ghost" 
+                            style={{ 
+                                padding: '0.5rem 0.75rem', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem',
+                                color: isRunning ? '#10b981' : 'inherit',
+                                background: isRunning ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                                border: isRunning ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent'
+                            }}
+                            title={isRunning ? "Stop Timer" : "Start Timer"}
+                        >
+                            <Clock size={18} className={isRunning ? "animate-pulse" : ""} />
+                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {formatDuration(elapsed)}
+                            </span>
+                        </button>
+
                         {editMode ? (
                             <button onClick={handleSave} className="btn btn-primary" style={{ padding: '0.5rem' }}>
                                 <Save size={18} />
@@ -415,19 +465,45 @@ export default function TaskDetailModal({ task, onClose }) {
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                         Created: {new Date(task.createdAt).toLocaleDateString()}
                     </span>
-                    <button
-                        onClick={() => { deleteTask(task.id); onClose(); }}
-                        className="btn"
-                        style={{
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            border: 'none',
-                            color: '#ef4444',
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        Archive Task
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button
+                            onClick={() => { deleteTask(task.id); onClose(); }} // deleteTask is Archive in context
+                            className="btn"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: 'none',
+                                color: 'var(--color-text-muted)',
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            <Archive size={16} /> Archive
+                        </button>
+                        <button
+                            onClick={() => { 
+                                if(window.confirm('Are you sure you want to delete this task permanently?')) {
+                                    deletePermanently(task.id); 
+                                    onClose(); 
+                                }
+                            }}
+                            className="btn"
+                            style={{
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: 'none',
+                                color: '#ef4444',
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            <Trash2 size={16} /> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

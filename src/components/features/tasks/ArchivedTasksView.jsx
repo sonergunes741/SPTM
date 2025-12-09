@@ -27,40 +27,58 @@ export default function ArchivedTasksView() {
             ) : (
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {sortedArchived.map(task => (
-                        <div key={task.id} className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', borderRadius: 'var(--radius-md)' }}>
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ textDecoration: 'line-through', color: 'var(--color-text-muted)' }}>{task.title}</h4>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                                    Completed on: {task.completedAt ? new Date(task.completedAt).toLocaleDateString() : 'Unknown'}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                    onClick={() => unarchiveTask(task.id)}
-                                    className="btn btn-ghost"
-                                    title="Restore to Dashboard"
-                                    style={{ padding: '0.5rem' }}
-                                >
-                                    <RotateCcw size={18} />
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (window.confirm('Delete this task permanently? This cannot be undone.')) {
-                                            deletePermanently(task.id);
-                                        }
-                                    }}
-                                    className="btn btn-ghost"
-                                    title="Delete Permanently"
-                                    style={{ padding: '0.5rem', color: 'var(--color-danger)' }}
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-                        </div>
+                        <ArchivedTaskItem 
+                            key={task.id} 
+                            task={task} 
+                            onRestore={unarchiveTask} 
+                            onDelete={deletePermanently} 
+                        />
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+function ArchivedTaskItem({ task, onRestore, onDelete }) {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    return (
+        <div 
+            className="glass-panel" 
+            style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', borderRadius: 'var(--radius-md)' }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div style={{ flex: 1 }}>
+                <h4 style={{ color: 'var(--color-text-muted)' }}>{task.title}</h4>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+                    Completed on: {task.completedAt ? new Date(task.completedAt).toLocaleDateString() : 'Unknown'}
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                <button
+                    onClick={() => onRestore(task.id)}
+                    className="btn btn-ghost"
+                    title="Restore to Dashboard"
+                    style={{ padding: '0.5rem', color: '#4ade80' }}
+                >
+                    <RotateCcw size={18} />
+                </button>
+                <button
+                    onClick={() => {
+                        if (window.confirm('Delete this task permanently? This cannot be undone.')) {
+                            onDelete(task.id);
+                        }
+                    }}
+                    className="btn btn-ghost"
+                    title="Delete Permanently"
+                    style={{ padding: '0.5rem', color: 'var(--color-danger)' }}
+                >
+                    <Trash2 size={18} />
+                </button>
+            </div>
         </div>
     );
 }

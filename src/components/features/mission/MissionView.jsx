@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
 import { useTasks } from '../../../context/TaskContext';
 import MissionWizard from './MissionWizard';
-import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart } from 'lucide-react';
+import MissionHistoryModal from './MissionHistoryModal';
+import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart, Clock } from 'lucide-react';
 
 export default function MissionView() {
     const {
@@ -26,44 +27,21 @@ export default function MissionView() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', maxWidth: '1100px', margin: '0 auto' }}>
 
-            {/* Compass Section: Values & Vision */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* Core Values */}
-                <ListSection
-                    title="Core Values"
-                    icon={<Heart size={18} className="text-primary" />}
-                    items={safeValues}
-                    onAdd={addValue}
-                    onUpdate={updateValue}
-                    onDelete={deleteValue}
-                    placeholder="Add a core value..."
-                    emptyMessage="What principles guide you?"
-                />
-
-                {/* Vision */}
-                <ListSection
-                    title="Long-term Vision"
-                    icon={<Compass size={18} className="text-primary" />}
-                    items={safeVisions}
-                    onAdd={addVision}
-                    onUpdate={updateVision}
-                    onDelete={deleteVision}
-                    placeholder="Add a vision statement..."
-                    emptyMessage="Where do you see yourself?"
-                />
-            </div>
-
-            <MissionProgressSection values={safeValues} visions={safeVisions} />
-
-            {/* Mission Statement */}
+            {/* 1. HERO: Personal Mission Statement */}
             <section>
-                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
-                    <Target size={16} /> Personal Mission
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                    <div>
+                        <h2 className="text-gradient-primary" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Personal Mission</h2>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Your ultimate core purpose.</p>
+                    </div>
+                </div>
+                
                 {rootMissions.length === 0 ? (
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
+                    <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', borderRadius: 'var(--radius-lg)', borderStyle: 'dashed' }}>
+                        <Target size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                        <h3 style={{ marginBottom: '1rem' }}>Define Your Mission</h3>
                         <button className="btn btn-primary" onClick={() => addMission('My Mission is...')}>Create Mission Statement</button>
                     </div>
                 ) : (
@@ -72,11 +50,49 @@ export default function MissionView() {
                     ))
                 )}
             </section>
+
+            {/* 2. COMPASS: Values & Vision */}
+            <section>
+                <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Compass size={22} className="text-primary" /> 
+                    <span>Inner Compass</span>
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                    {/* Core Values */}
+                    <ListSection
+                        title="Core Values"
+                        icon={<Heart size={18} style={{ color: '#ef4444' }} />}
+                        items={safeValues}
+                        onAdd={addValue}
+                        onUpdate={updateValue}
+                        onDelete={deleteValue}
+                        placeholder="Add a core value..."
+                        emptyMessage="What principles guide you?"
+                        accentColor="rgba(239, 68, 68, 0.1)"
+                    />
+
+                    {/* Vision */}
+                    <ListSection
+                        title="Long-term Vision"
+                        icon={<Compass size={18} style={{ color: '#8b5cf6' }} />}
+                        items={safeVisions}
+                        onAdd={addVision}
+                        onUpdate={updateVision}
+                        onDelete={deleteVision}
+                        placeholder="Add a vision statement..."
+                        emptyMessage="Where do you see yourself in 5 years?"
+                        accentColor="rgba(139, 92, 246, 0.1)"
+                    />
+                </div>
+            </section>
+
+             {/* 3. TRACKING: Progress */}
+             <MissionProgressSection values={safeValues} visions={safeVisions} />
         </div>
     );
 }
 
-function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, placeholder, emptyMessage }) {
+function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, placeholder, emptyMessage, accentColor = 'rgba(255,255,255,0.05)' }) {
     const [isAdding, setIsAdding] = useState(false);
     const [newItemText, setNewItemText] = useState('');
 
@@ -89,17 +105,36 @@ function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, place
     };
 
     return (
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+        <div className="glass-panel" style={{ 
+            padding: '0', 
+            borderRadius: 'var(--radius-lg)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%',
+            overflow: 'hidden' 
+        }}>
+            <div style={{ 
+                padding: '1.25rem', 
+                background: accentColor, 
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' 
+            }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', margin: 0 }}>
                     {icon} {title}
                 </h3>
-                <button className="btn btn-ghost" onClick={() => setIsAdding(true)} size="sm" title="Add Item">
+                <button 
+                    className="btn btn-ghost" 
+                    onClick={() => setIsAdding(true)} 
+                    style={{ background: 'rgba(255,255,255,0.1)', width: '32px', height: '32px', padding: 0, borderRadius: '50%' }}
+                    title="Add Item"
+                >
                     <Plus size={16} />
                 </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {items.length === 0 && !isAdding && (
                     <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.9rem' }}>
                         {emptyMessage}
@@ -132,6 +167,7 @@ function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, place
 
 function ListItem({ item, onUpdate, onDelete }) {
     const [isEditing, setIsEditing] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const [text, setText] = useState(item.text);
 
     const handleSave = () => {
@@ -157,9 +193,13 @@ function ListItem({ item, onUpdate, onDelete }) {
     }
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+        <div 
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
             <span style={{ flex: 1, marginRight: '0.5rem' }}>{item.text}</span>
-            <div style={{ display: 'flex', opacity: 0.7 }}>
+            <div style={{ display: 'flex', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
                 <button className="btn btn-ghost" onClick={() => setIsEditing(true)} style={{ padding: '0.25rem' }}><Edit2 size={14} /></button>
                 <button className="btn btn-ghost" onClick={() => onDelete(item.id)} style={{ padding: '0.25rem', color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
             </div>
@@ -174,6 +214,7 @@ function MissionCard({ mission, isRoot }) {
     const [isAddingChild, setIsAddingChild] = useState(false);
     const [newRoleText, setNewRoleText] = useState('');
     const [editText, setEditText] = useState(mission.text);
+    const [isHovered, setIsHovered] = useState(false);
     const subMissions = getSubMissions(mission.id);
 
     const handleSave = () => {
@@ -198,19 +239,23 @@ function MissionCard({ mission, isRoot }) {
     if (!isRoot) {
         // Render as a Role Card
         return (
-            <div className="glass-panel" style={{
-                padding: '1rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                minHeight: '120px'
-            }}>
+            <div 
+                className="glass-panel" 
+                style={{
+                    padding: '0.75rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem'
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ fontWeight: 600, fontSize: '1rem' }}>{mission.text}</div>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
                         <button className="btn btn-ghost" onClick={() => {
                             const newText = prompt("Update Role name:", mission.text);
                             if (newText) updateMission(mission.id, newText);
@@ -234,14 +279,21 @@ function MissionCard({ mission, isRoot }) {
 
     // Root Mission Card
     return (
-        <div className="glass-panel" style={{
-            padding: '2rem',
-            borderRadius: 'var(--radius-lg)',
-            marginBottom: '1rem',
-            borderLeft: '4px solid var(--color-primary)',
-            background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.4))'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' }}>
+        <div 
+            className="glass-panel" 
+            style={{
+                padding: '2rem',
+                borderRadius: 'var(--radius-lg)',
+                marginBottom: '1rem',
+                borderLeft: '4px solid var(--color-primary)',
+                background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.4))'
+            }}
+        >
+            <div 
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
                 <div style={{ flex: 1 }}>
                     {isEditing ? (
                         <div>
@@ -265,7 +317,10 @@ function MissionCard({ mission, isRoot }) {
                     )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                    <button className="btn btn-ghost" onClick={() => setShowHistory(true)} title="View History">
+                        <Clock size={18} className="text-primary" />
+                    </button>
                     <button className="btn btn-ghost" onClick={() => setIsEditing(true)} title="Edit Mission">
                         <Edit2 size={18} />
                     </button>
@@ -273,16 +328,37 @@ function MissionCard({ mission, isRoot }) {
             </div>
 
             {/* Sub-Missions / Roles Grid */}
-            <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Roles & Key Areas</h4>
-                    <button className="btn btn-ghost" onClick={() => setIsAddingChild(true)} style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Plus size={16} /> Add Role
+            <div style={{
+                marginTop: '1.5rem',
+                paddingTop: '1.5rem',
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>Roles & Key Areas</h4>
+                    <button 
+                        className="btn btn-ghost" 
+                        onClick={() => setIsAddingChild(true)} 
+                        style={{ 
+                            padding: '0.25rem', 
+                            height: '24px', 
+                            width: '24px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.1)'
+                        }}
+                        title="Add Role"
+                    >
+                        <Plus size={14} /> 
                     </button>
                 </div>
 
                 {isAddingChild && (
-                    <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: 'var(--radius-md)' }}>
                         <input
                             autoFocus
                             type="text"
@@ -292,34 +368,21 @@ function MissionCard({ mission, isRoot }) {
                             style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
                             onKeyDown={e => e.key === 'Enter' && handleAddChild()}
                         />
-                        <button className="btn btn-primary" onClick={handleAddChild}>Add</button>
-                        <button className="btn btn-ghost" onClick={() => setIsAddingChild(false)}>Cancel</button>
+                        <button className="btn btn-primary" onClick={handleAddChild} size="sm">Add</button>
+                        <button className="btn btn-ghost" onClick={() => setIsAddingChild(false)} size="sm"><X size={14}/></button>
                     </div>
                 )}
 
-                {subMissions.length === 0 && !isAddingChild ? (
-                    <div style={{
-                        padding: '2rem',
-                        border: '2px dashed rgba(255,255,255,0.1)',
-                        borderRadius: 'var(--radius-md)',
-                        textAlign: 'center',
-                        color: 'var(--color-text-muted)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                        onClick={() => setIsAddingChild(true)}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
-                    >
-                        <Plus size={24} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
-                        <p style={{ margin: 0 }}>Define your key roles (e.g. Student, Professional) to break down your mission.</p>
-                    </div>
-                ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                        {subMissions.map(sub => (
-                            <MissionCard key={sub.id} mission={sub} isRoot={false} />
-                        ))}
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                    {subMissions.map(sub => (
+                        <MissionCard key={sub.id} mission={sub} isRoot={false} />
+                    ))}
+                </div>
+                
+                {subMissions.length === 0 && !isAddingChild && (
+                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '0.5rem 0' }}>
+                        No roles defined yet. Click + to add.
+                     </div>
                 )}
             </div>
         </div>

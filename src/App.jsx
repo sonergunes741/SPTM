@@ -14,15 +14,58 @@ import MissionWidget from "./components/features/mission/MissionWidget";
 import CalendarView from "./components/features/calendar/CalendarView";
 import StatsView from "./components/features/stats/StatsView";
 import ArchivedTasksView from "./components/features/tasks/ArchivedTasksView";
-import LevelWidget from "./components/features/gamification/LevelWidget";
 import InboxWidget from "./components/features/inbox/InboxWidget";
 import WeeklyReview from "./components/features/review/WeeklyReview";
 import NotificationsWidget from "./components/features/notifications/NotificationsWidget";
 import { GoogleCalendarProvider } from "./context/GoogleCalendarContext";
 import GoogleCalendarLogin from "./components/features/calendar/GoogleCalendarLogin";
 
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { useTasks } from './context/TaskContext';
+import TaskCard from './components/features/tasks/TaskCard';
+
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { updateTask, tasks } = useTasks();
+  const [activeDragId, setActiveDragId] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  const handleDragStart = (event) => {
+    setActiveDragId(event.active.id);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveDragId(null);
+
+    if (over && active.id !== over.id) {
+        // Determine Target Quadrant
+        const quadrant = over.id; // 'q1', 'q2', 'q3', 'q4'
+        let updates = {};
+
+        switch (quadrant) {
+            case 'q1': updates = { urge: true, imp: true }; break;
+            case 'q2': updates = { urge: false, imp: true }; break;
+            case 'q3': updates = { urge: true, imp: false }; break;
+            case 'q4': updates = { urge: false, imp: false }; break;
+            default: return; // Dropped elsewhere
+        }
+
+        // Apply Updates: Set Priority & Remove from Inbox
+        updateTask(active.id, {
+            ...updates,
+            isInbox: false,
+            context: '@home' // Default to home context if not set, or keep existing? Let's imply 'Projectizing' it.
+        });
+    }
+  };
 
   return (
     <GoogleCalendarProvider>
@@ -46,20 +89,19 @@ function App() {
             onClick={() => setActiveTab("dashboard")}
           >
             <h1
+              className="text-gradient-primary"
               style={{
-                fontSize: "1.5rem",
-                background:
-                  "linear-gradient(135deg, var(--color-primary) 0%, #fff 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                fontSize: "2rem",
+                letterSpacing: "-0.03em",
+                marginBottom: "0.25rem"
               }}
             >
               SPTM
             </h1>
             <p
-              style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}
+              style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", fontWeight: 500 }}
             >
-              Personal Task Manager
+              Smart Personal Task Manager
             </p>
           </div>
 
@@ -75,7 +117,18 @@ function App() {
             <NavButton
               active={activeTab === "mission"}
               onClick={() => setActiveTab("mission")}
-              icon={<Target size={20} />}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path 
+                        d="M12 1 L13 10 L 17 6 L 14 11 L 23 12 L 14 13 L 17 18 L 13 14 L 12 23 L 11 14 L 7 18 L 10 13 L 1 12 L 10 11 L 7 6 L 11 10 Z" 
+                        stroke="currentColor" 
+                        strokeWidth="1.5"
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        fill="rgba(15, 23, 42, 0.8)" 
+                    />
+                </svg>
+              }
               label="My Mission"
             />
             <NavButton
@@ -198,37 +251,56 @@ function App() {
           {/* Content Placeholder */}
           <div className="content-area">
             {activeTab === "dashboard" && (
+            <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div
                 style={{
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
+                  gap: "1.5rem"
                 }}
               >
+                {/* Top Banner: Mission Compass */}
+                <div style={{ flexShrink: 0 }}>
+                    <MissionWidget />
+                </div>
+
+                {/* Main Workspace: Split Inbox & Matrix */}
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr 2fr",
+                    gridTemplateColumns: "320px 1fr", // Fixed width for inbox side panel, rest for Matrix
                     gap: "1.5rem",
-                    marginBottom: "1.5rem",
+                    flex: 1,
+                    minHeight: 0 // Important for nested scrolling
                   }}
                 >
-                  <LevelWidget />
-                  <InboxWidget />
-                  <MissionWidget />
-                </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1.5rem",
-                    marginBottom: "1.5rem",
-                  }}
-                ></div>
-                <div style={{ flex: 1 }}>
-                  <CoveyMatrix />
+                  <div style={{ height: "100%", overflow: "hidden" }}>
+                    <InboxWidget />
+                  </div>
+                  <div style={{ height: "100%", overflow: "hidden" }}>
+                    <CoveyMatrix />
+                  </div>
                 </div>
               </div>
+               {/* Drag Overlay could be added here for preview if needed, but simplistic approach first */}
+                <DragOverlay dropAnimation={null}>
+                    {activeDragId ? (
+                        <div style={{ 
+                            cursor: 'grabbing',
+                            opacity: 1, // Full opacity for content
+                            background: 'rgba(30, 41, 59, 0.9)', // Darker background to cover underneath
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid rgba(255,255,255,0.3)', // More distinct border
+                            boxShadow: '0 0 20px rgba(168, 85, 247, 0.2), 0 8px 32px rgba(0,0,0,0.5)', // Purple glow + deep shadow
+                            transform: 'scale(1.02)',
+                            backdropFilter: 'blur(8px)' // Strong glass effect
+                        }}>
+                             <TaskCard task={tasks.find(t => t.id === activeDragId)} compact={true} />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+              </DndContext>
             )}
             {activeTab === "mission" && <MissionView />}
             {activeTab === "calendar" && <CalendarView />}
@@ -249,21 +321,36 @@ function NavButton({ active, onClick, icon, label }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "0.75rem",
-        padding: "0.75rem 1rem",
+        gap: "1rem",
+        padding: "0.85rem 1rem",
         border: "none",
-        background: active ? "rgba(99, 102, 241, 0.1)" : "transparent",
-        color: active ? "var(--color-primary)" : "var(--color-text-muted)",
-        borderRadius: "var(--radius-md)",
+        background: active ? "linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent)" : "transparent",
+        color: active ? "#a855f7" : "var(--color-text-muted)",
+        borderLeft: active ? "3px solid #a855f7" : "3px solid transparent",
+        borderRadius: "0 var(--radius-md) var(--radius-md) 0",
         cursor: "pointer",
         fontSize: "0.95rem",
-        fontWeight: active ? 600 : 400,
-        transition: "all 0.2s",
+        fontWeight: active ? 600 : 500,
+        transition: "all 0.2s ease",
         textAlign: "left",
         width: "100%",
+        marginLeft: "-1rem",
+        paddingLeft: "2rem"
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+            e.currentTarget.style.color = "var(--color-text-main)";
+            e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+            e.currentTarget.style.color = "var(--color-text-muted)";
+            e.currentTarget.style.background = "transparent";
+        }
       }}
     >
-      {icon}
+      <span style={{ opacity: active ? 1 : 0.7, transition: 'opacity 0.2s' }}>{icon}</span>
       {label}
     </button>
   );

@@ -18,54 +18,71 @@ export default function MissionWidget() {
 
     return (
         <div className="glass-panel" style={{
-            padding: '1.5rem',
+            padding: '1.5rem 2.5rem',
             borderRadius: 'var(--radius-lg)',
-            marginBottom: '1.5rem',
-            background: 'linear-gradient(to right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            height: '100%',
-            display: 'grid',
-            gridTemplateColumns: '1.2fr 1fr 1fr', // Give Mission slightly more space
-            gap: '2rem'
+            marginBottom: '1rem',
+            // Deep space background with a "North Star" cool shine
+            background: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.8) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2rem',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
         }}>
-            {/* Mission Section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    <Target size={16} color="var(--color-primary)" /> Current Mission
+            {/* Custom North Star Icon & Label */}
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                color: 'white',
+                minWidth: '100px',
+                textAlign: 'center'
+            }}>
+                <div style={{ 
+                    filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.9))', 
+                    marginBottom: '0.25rem'
+                }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        {/* 8-Pointed Compass Rose: 4 Main (Long), 4 Diagonal (Short) */}
+                        <path d="M12 1 L13 10 L 17 6 L 14 11 L 23 12 L 14 13 L 17 18 L 13 14 L 12 23 L 11 14 L 7 18 L 10 13 L 1 12 L 10 11 L 7 6 L 11 10 Z" />
+                    </svg>
                 </div>
-                <div style={{ fontSize: '1.1rem', lineHeight: 1.4, fontWeight: 600 }}>
-                    {mission ? `"${mission}"` : <span className="text-muted italic" style={{ fontSize: '0.9rem', fontWeight: 400 }}>No mission statement defined.</span>}
-                </div>
+                <span style={{ 
+                    fontSize: '0.65rem', 
+                    fontWeight: 800, 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '2px',
+                    opacity: 0.9,
+                    color: 'rgba(255,255,255,0.8)'
+                }}>
+                    North Star
+                </span>
             </div>
 
-            {/* Vision Section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    <Compass size={16} color="#a855f7" /> Vision
-                </div>
-                {visions.length > 0 ? (
-                    <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-                        {visions.slice(0, 3).map(v => <li key={v.id}>{v.text}</li>)}
-                        {visions.length > 3 && <li>+ {visions.length - 3} more</li>}
-                    </ul>
-                ) : <span className="text-muted italic" style={{ fontSize: '0.9rem' }}>No vision defined.</span>}
-            </div>
+            {/* Separator with gradient fade */}
+            <div style={{ 
+                width: '1px', 
+                height: '40px', 
+                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent)' 
+            }}></div>
 
-            {/* Values Section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    <Heart size={16} color="#ec4899" /> Core Values
-                </div>
-                {values.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {values.slice(0, 5).map(v => (
-                            <span key={v.id} style={{ background: 'rgba(236, 72, 153, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.8rem', color: '#fbcfe8', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
-                                {v.text}
-                            </span>
-                        ))}
-                        {values.length > 5 && <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>+ {values.length - 5}</span>}
-                    </div>
-                ) : <span className="text-muted italic" style={{ fontSize: '0.9rem' }}>No values defined.</span>}
+            {/* Mission Statement */}
+            <div style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: 500, 
+                fontFamily: 'serif', 
+                fontStyle: 'italic', 
+                color: 'white',
+                flex: 1,
+                textAlign: 'center',
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                lineHeight: 1.4
+            }}>
+                {mission ? `"${mission}"` : <span className="text-muted italic" style={{ fontSize: '0.9rem', fontStyle: 'normal', fontFamily: 'var(--font-sans)' }}>Define your mission in "My Mission" to set your North Star.</span>}
             </div>
         </div>
     );

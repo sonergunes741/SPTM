@@ -10,7 +10,9 @@ export default function GoogleCalendarSync() {
     error,
     createCalendarEvent,
     fetchCalendarEvents,
+    calendarEvents
   } = useGoogleCalendar();
+  
   const { tasks } = useTasks();
   const [syncStatus, setSyncStatus] = useState(null);
   const [syncedCount, setSyncedCount] = useState(0);
@@ -115,7 +117,7 @@ export default function GoogleCalendarSync() {
       {syncStatus === "success" && (
         <div style={styles.successMessage}>
           <CheckCircle size={16} style={styles.messageIcon} />
-          <span>{syncedCount} item(s) synced successfully</span>
+          <span>{syncedCount} item(s) processed</span>
         </div>
       )}
 
@@ -126,11 +128,76 @@ export default function GoogleCalendarSync() {
         </div>
       )}
 
+      {/* Events List for Import */}
+      {calendarEvents && calendarEvents.length > 0 && (
+        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+             <h4 style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                Found {calendarEvents.length} Events (Click to Import)
+            </h4>
+            <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                {calendarEvents.map(event => (
+                    <CalendarEventItem key={event.id} event={event} />
+                ))}
+            </div>
+        </div>
+      )}
+
       <p style={styles.info}>
         Sync your tasks with Google Calendar to keep everything organized.
+        Fetch events to import them as tasks.
       </p>
     </div>
   );
+}
+
+function CalendarEventItem({ event }) {
+    const { addTask } = useTasks();
+    const [imported, setImported] = useState(false);
+
+    const handleImport = () => {
+        addTask({
+            title: event.summary || "No Title",
+            description: (event.description || "") + "\n\n[Imported from Google Calendar]",
+            dueDate: event.start.dateTime ? event.start.dateTime.split('T')[0] : (event.start.date || null),
+            context: '@work' // Default context
+        });
+        setImported(true);
+    };
+
+    if (imported) return null;
+
+    return (
+        <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px',
+            fontSize: '0.85rem', marginBottom: '0.25rem'
+        }}>
+            <div style={{ overflow: 'hidden', flex: 1, marginRight: '0.5rem' }}>
+                <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--color-text-main)' }}>
+                    {event.summary || "No Title"}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    {new Date(event.start.dateTime || event.start.date).toLocaleDateString()}
+                    {event.start.dateTime && ` • ${new Date(event.start.dateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                </div>
+            </div>
+            <button
+                onClick={handleImport}
+                className="btn btn-ghost"
+                style={{
+                    padding: '0.25rem 0.5rem',
+                    fontSize: '0.75rem',
+                    color: 'var(--color-primary)',
+                    display: 'flex', alignItems: 'center', gap: '0.25rem',
+                    borderRadius: '4px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }}
+                disabled={imported}
+            >
+                <div>Import</div>
+            </button>
+        </div>
+    );
 }
 
 const styles = {
@@ -151,9 +218,9 @@ const styles = {
   },
   title: {
     margin: 0,
-    color: "#fff",
     fontSize: "0.95rem",
     fontWeight: "600",
+    color: "var(--color-text-main)"
   },
   buttonGroup: {
     display: "flex",
@@ -201,7 +268,7 @@ const styles = {
   },
   info: {
     margin: "0.5rem 0 0 0",
-    color: "rgba(255, 255, 255, 0.6)",
+    color: "var(--color-text-muted)",
     fontSize: "0.75rem",
     lineHeight: "1.3",
   },

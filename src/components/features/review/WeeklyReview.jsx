@@ -1,98 +1,181 @@
 import React, { useState } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
-import { CheckCircle2, Circle, RefreshCcw, ChevronRight, ChevronDown, Brain, Target, ListTodo, Archive } from 'lucide-react';
+import { CheckCircle2, Circle, RefreshCcw, ChevronRight, ChevronDown, Brain, Target, ListTodo, Archive, Plus, Trash2, Calendar as CalendarIcon, ArrowRight, Tag } from 'lucide-react';
 
 export default function WeeklyReview() {
-    const { tasks, archiveTask } = useTasks();
+    const { tasks, archiveTask, addTask, updateTask, deletePermanently } = useTasks();
     const { visions, values, missions } = useMission();
     const [currentStep, setCurrentStep] = useState(0);
     const [completedSteps, setCompletedSteps] = useState([]);
     const [expandedStep, setExpandedStep] = useState(0);
+
+    // --- Step 1 Layout: Brain Dump ---
+    const [dumpInput, setDumpInput] = useState('');
+    const handleDump = (e) => {
+        e.preventDefault();
+        if(!dumpInput.trim()) return;
+        addTask({
+            title: dumpInput,
+            isInbox: true,
+            context: '@inbox',
+            createdAt: new Date().toISOString()
+        });
+        setDumpInput('');
+    };
+
+    // --- Step 2 Layout: Process Inbox ---
+    const inboxTasks = tasks.filter(t => t.isInbox && !t.isArchived && t.status !== 'done');
+    const processInboxItem = (taskId, action, payload = {}) => {
+        if (action === 'delete') {
+            if(confirm('Delete permanently?')) deletePermanently(taskId);
+        } else if (action === 'defer') {
+             // Set due date (simple +1 day for now or we could open a picker, simplified for UI)
+             const tomorrow = new Date();
+             tomorrow.setDate(tomorrow.getDate() + 1);
+             updateTask(taskId, { isInbox: false, dueDate: tomorrow.toISOString(), context: '@waiting' });
+        } else if (action === 'do') {
+             // Move to Next Actions (default @home)
+             updateTask(taskId, { isInbox: false, context: payload.context || '@home' });
+        } else if (action === 'delegate') {
+             updateTask(taskId, { isInbox: false, context: '@waiting' });
+        }
+    };
 
     const reviewSteps = [
         {
             id: 'collect',
             title: 'Collect & Capture',
             icon: Brain,
-            description: 'Review all open loops, notes, and ideas. Capture anything on your mind.',
-            action: 'Have you captured all pending thoughts and tasks?',
-            color: '#a855f7'
+            description: 'Clear your mind. Dump everything that has your attention into the Inbox.',
+            actionLabel: 'Brain Dump',
+            color: '#a855f7',
+            renderContent: () => (
+                <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)' }}>
+                    <form onSubmit={handleDump} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <input
+                            type="text"
+                            value={dumpInput}
+                            onChange={(e) => setDumpInput(e.target.value)}
+                            placeholder="What's on your mind? (Enter to add)"
+                            style={{
+                                flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)',
+                                border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white'
+                            }}
+                            autoFocus
+                        />
+                        <button type="submit" className="btn btn-primary" style={{ padding: '0 1rem' }}>
+                            <Plus size={20} />
+                        </button>
+                    </form>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                        Added {inboxTasks.filter(t => new Date(t.createdAt) > new Date(Date.now() - 1000 * 60 * 5)).length} items in this session.
+                    </div>
+                </div>
+            )
         },
         {
             id: 'process',
             title: 'Process Inbox',
             icon: ListTodo,
-            description: 'Process each item in your inbox. Decide: Do it, Delegate it, Defer it, or Delete it.',
-            action: 'Is your inbox empty or processed?',
+            description: 'Clarify your inputs. Is it actionable? If no, trash it. If yes, decide the next action.',
+            actionLabel: 'Zero Inbox',
             color: '#3b82f6',
-            stats: () => {
-                const inboxCount = tasks.filter(t => t.isInbox && !t.isArchived && t.status !== 'done').length;
-                return inboxCount > 0
-                    ? `${inboxCount} items still in inbox`
-                    : 'Inbox is clear! ✓';
-            }
-        },
-        {
-            id: 'review-actions',
-            title: 'Review Next Actions',
-            icon: Target,
-            description: 'Review your current tasks. Mark completed ones, update or remove stale ones.',
-            action: 'Are all tasks current and actionable?',
-            color: '#10b981',
-            stats: () => {
-                const pending = tasks.filter(t => !t.isArchived && t.status !== 'done').length;
-                const overdue = tasks.filter(t => {
-                    if (t.isArchived || t.status === 'done' || !t.dueDate) return false;
-                    return new Date(t.dueDate) < new Date();
-                }).length;
-                return `${pending} pending tasks${overdue > 0 ? `, ${overdue} overdue` : ''}`;
-            }
+            stats: () => `${inboxTasks.length} items remaining`,
+            renderContent: () => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                    {inboxTasks.length === 0 ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                            Inbox is empty! Great job.
+                        </div>
+                    ) : (
+                        inboxTasks.map(task => (
+                            <div key={task.id} className="glass-panel" style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                                <span style={{ flex: 1, fontWeight: 500 }}>{task.title}</span>
+                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button className="btn btn-ghost" title="Do (Move to Actions)" onClick={() => processInboxItem(task.id, 'do')} style={{ color: '#10b981' }}><CheckCircle2 size={16} /></button>
+                                    <button className="btn btn-ghost" title="Defer (Tomorrow)" onClick={() => processInboxItem(task.id, 'defer')} style={{ color: '#f59e0b' }}><CalendarIcon size={16} /></button>
+                                    <button className="btn btn-ghost" title="Delete" onClick={() => processInboxItem(task.id, 'delete')} style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )
         },
         {
             id: 'review-calendar',
             title: 'Review Calendar',
-            icon: RefreshCcw,
-            description: 'Look at upcoming week. Any meetings that need preparation? Any deadlines approaching?',
-            action: 'Have you looked at your calendar for the coming week?',
+            icon: CalendarIcon, // Changed icon for clarity
+            description: 'Look at the upcoming week (Next 7 Days).',
+            actionLabel: 'Check Schedule',
             color: '#f59e0b',
-            stats: () => {
+            renderContent: () => {
                 const nextWeek = new Date();
                 nextWeek.setDate(nextWeek.getDate() + 7);
                 const upcoming = tasks.filter(t => {
                     if (t.isArchived || t.status === 'done' || !t.dueDate) return false;
                     const dueDate = new Date(t.dueDate);
                     return dueDate >= new Date() && dueDate <= nextWeek;
-                }).length;
-                return `${upcoming} tasks due this week`;
+                }).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                         {upcoming.length === 0 ? (
+                            <div style={{ padding: '1rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No tasks scheduled for the next 7 days.</div>
+                         ) : upcoming.map(task => (
+                            <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ fontSize: '0.8rem', color: '#f59e0b', width: '80px' }}>{new Date(task.dueDate).toLocaleDateString(undefined, {weekday: 'short', month:'short', day:'numeric'})}</div>
+                                <div style={{ flex: 1 }}>{task.title}</div>
+                            </div>
+                         ))}
+                    </div>
+                )
             }
         },
         {
             id: 'review-mission',
             title: 'Review Mission & Goals',
             icon: Target,
-            description: 'Reflect on your mission statement, values, and long-term vision. Are your tasks aligned?',
-            action: 'Are your current priorities aligned with your mission?',
+            description: 'Ensure your ladder is leaning against the right wall.',
+            actionLabel: 'Align Priorities',
             color: '#ec4899',
-            stats: () => {
-                const linked = tasks.filter(t => !t.isArchived && t.missionId).length;
-                const total = tasks.filter(t => !t.isArchived).length;
-                const pct = total > 0 ? Math.round((linked / total) * 100) : 0;
-                return `${pct}% of tasks linked to mission`;
-            }
+            renderContent: () => (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    {/* Simplified Stats */}
+                    <div className="glass-panel" style={{ padding: '1rem', textAlign: 'center' }}>
+                         <div style={{ fontSize: '2rem', fontWeight: 700, color: '#ec4899' }}>{missions.length}</div>
+                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Active Roles</div>
+                    </div>
+                    <div className="glass-panel" style={{ padding: '1rem', textAlign: 'center' }}>
+                         <div style={{ fontSize: '2rem', fontWeight: 700, color: '#ec4899' }}>{Math.round((tasks.filter(t => !t.isArchived && t.missionId).length / tasks.filter(t => !t.isArchived).length) * 100) || 0}%</div>
+                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Mission Alignment</div>
+                    </div>
+                </div>
+            )
         },
         {
             id: 'cleanup',
             title: 'Clean Up & Archive',
             icon: Archive,
-            description: 'Archive completed tasks, clean up your workspace, and prepare for the week ahead.',
-            action: 'Ready to start the new week with clarity?',
+            description: 'Clear the decks for the new week.',
+            actionLabel: 'Archive Completed',
             color: '#6366f1',
-            stats: () => {
-                const completedNotArchived = tasks.filter(t => t.status === 'done' && !t.isArchived).length;
-                return completedNotArchived > 0
-                    ? `${completedNotArchived} completed tasks to archive`
-                    : 'All clean! ✓';
+            renderContent: () => {
+                const completedCount = tasks.filter(t => t.status === 'done' && !t.isArchived).length;
+                 return (
+                    <div style={{ textAlign: 'center', padding: '1rem' }}>
+                        {completedCount > 0 ? (
+                             <button className="btn btn-outline" onClick={() => {
+                                 tasks.filter(t => t.status === 'done' && !t.isArchived).forEach(t => archiveTask(t.id));
+                             }}>
+                                Archive All {completedCount} Completed Tasks
+                             </button>
+                        ) : (
+                            <div style={{ color: '#10b981' }}>All completed tasks are archived. Clean slate!</div>
+                        )}
+                    </div>
+                )
             }
         }
     ];
@@ -101,7 +184,6 @@ export default function WeeklyReview() {
         if (!completedSteps.includes(stepId)) {
             setCompletedSteps([...completedSteps, stepId]);
         }
-        // Move to next step
         if (currentStep < reviewSteps.length - 1) {
             setCurrentStep(currentStep + 1);
             setExpandedStep(currentStep + 1);
@@ -116,59 +198,57 @@ export default function WeeklyReview() {
     const isComplete = completedSteps.length === reviewSteps.length;
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }}>
             {/* Header */}
             <div className="glass-panel" style={{
                 padding: '2rem',
                 borderRadius: 'var(--radius-lg)',
-                marginBottom: '1.5rem',
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1))'
+                marginBottom: '2rem',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                boxShadow: '0 8px 32px rgba(99, 102, 241, 0.1)'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <div>
-                        <h3 style={{ margin: 0, marginBottom: '0.5rem' }}>📋 Weekly Review</h3>
-                        <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                            GTD methodology: Clear your mind, process inputs, review commitments
-                        </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '16px',
+                            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px solid rgba(99, 102, 241, 0.3)', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)'
+                        }}>
+                            <RefreshCcw size={28} style={{ color: '#c4b5fd' }} />
+                        </div>
+                        <div>
+                            <h2 className="text-gradient-primary" style={{ fontSize: '2rem', margin: 0, lineHeight: 1.1 }}>Weekly Review</h2>
+                            <p style={{ margin: '0.25rem 0 0 0', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                Clear your mind, process inputs, and review commitments.
+                            </p>
+                        </div>
                     </div>
+                
                     {isComplete && (
                         <div style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgba(16, 185, 129, 0.2)',
-                            borderRadius: 'var(--radius-md)',
-                            color: '#10b981',
-                            fontSize: '0.85rem',
-                            fontWeight: 600
+                            padding: '0.75rem 1.25rem', background: 'rgba(16, 185, 129, 0.2)',
+                            borderRadius: 'var(--radius-md)', color: '#34d399', fontSize: '0.9rem',
+                            fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            border: '1px solid rgba(16, 185, 129, 0.3)'
                         }}>
-                            ✅ Review Complete!
+                            <CheckCircle2 size={20} /> Review Complete!
                         </div>
                     )}
                 </div>
 
                 {/* Progress Bar */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{
-                        flex: 1,
-                        height: '8px',
-                        background: 'rgba(255,255,255,0.1)',
-                        borderRadius: '4px',
-                        overflow: 'hidden'
-                    }}>
-                        <div style={{
-                            height: '100%',
-                            width: `${progress}%`,
-                            background: 'linear-gradient(90deg, #6366f1, #a855f7)',
-                            transition: 'width 0.5s ease'
-                        }} />
+                    <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', transition: 'width 0.5s ease' }} />
                     </div>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                        {completedSteps.length}/{reviewSteps.length}
-                    </span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{completedSteps.length}/{reviewSteps.length}</span>
                 </div>
             </div>
 
             {/* Review Steps */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {reviewSteps.map((step, index) => {
                     const isCompleted = completedSteps.includes(step.id);
                     const isExpanded = expandedStep === index;
@@ -179,10 +259,9 @@ export default function WeeklyReview() {
                             key={step.id}
                             className="glass-panel"
                             style={{
-                                borderRadius: 'var(--radius-lg)',
-                                overflow: 'hidden',
+                                borderRadius: 'var(--radius-lg)', overflow: 'hidden',
                                 borderLeft: `4px solid ${isCompleted ? '#10b981' : step.color}`,
-                                opacity: isCompleted ? 0.7 : 1,
+                                opacity: isCompleted && !isExpanded ? 0.6 : 1, // Dim if completed but not focussed
                                 transition: 'all 0.3s ease'
                             }}
                         >
@@ -190,81 +269,42 @@ export default function WeeklyReview() {
                             <div
                                 onClick={() => toggleStep(index)}
                                 style={{
-                                    padding: '1rem 1.5rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    cursor: 'pointer',
-                                    background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent'
+                                    padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem',
+                                    cursor: 'pointer', background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent'
                                 }}
                             >
                                 <div style={{
-                                    width: '36px',
-                                    height: '36px',
-                                    borderRadius: 'var(--radius-md)',
-                                    background: isCompleted
-                                        ? 'rgba(16, 185, 129, 0.2)'
-                                        : `${step.color}20`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    width: '36px', height: '36px', borderRadius: 'var(--radius-md)',
+                                    background: isCompleted ? 'rgba(16, 185, 129, 0.2)' : `${step.color}20`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
-                                    {isCompleted ? (
-                                        <CheckCircle2 size={18} style={{ color: '#10b981' }} />
-                                    ) : (
-                                        <Icon size={18} style={{ color: step.color }} />
-                                    )}
+                                    {isCompleted ? <CheckCircle2 size={18} style={{ color: '#10b981' }} /> : <Icon size={18} style={{ color: step.color }} />}
                                 </div>
 
                                 <div style={{ flex: 1 }}>
-                                    <div style={{
-                                        fontWeight: 600,
-                                        fontSize: '0.95rem',
-                                        textDecoration: isCompleted ? 'line-through' : 'none',
-                                        opacity: isCompleted ? 0.7 : 1
-                                    }}>
+                                    <div style={{ fontWeight: 600, fontSize: '1rem', textDecoration: isCompleted ? 'line-through' : 'none', opacity: isCompleted ? 0.7 : 1 }}>
                                         {step.title}
                                     </div>
-                                    {step.stats && (
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                                            {step.stats()}
-                                        </div>
-                                    )}
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                        {step.description}
+                                    </div>
                                 </div>
-
                                 {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                             </div>
 
                             {/* Step Content */}
-                            {isExpanded && !isCompleted && (
-                                <div style={{
-                                    padding: '0 1.5rem 1.5rem 1.5rem',
-                                    borderTop: '1px solid rgba(255,255,255,0.05)'
-                                }}>
-                                    <p style={{
-                                        color: 'var(--color-text-muted)',
-                                        fontSize: '0.9rem',
-                                        marginTop: '1rem',
-                                        marginBottom: '1rem',
-                                        lineHeight: 1.6
-                                    }}>
-                                        {step.description}
-                                    </p>
-                                    <div style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '1rem',
-                                        background: 'rgba(255,255,255,0.03)',
-                                        borderRadius: 'var(--radius-md)'
-                                    }}>
-                                        <span style={{ fontSize: '0.9rem' }}>{step.action}</span>
+                            {isExpanded && (
+                                <div style={{ padding: '0 1.5rem 1.5rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ margin: '1rem 0' }}>
+                                        {step.renderContent && step.renderContent()}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
                                         <button
                                             onClick={() => markStepComplete(step.id)}
-                                            className="btn btn-primary"
-                                            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                                            className={`btn ${isCompleted ? 'btn-ghost' : 'btn-primary'}`}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                         >
-                                            Done ✓
+                                            {isCompleted ? 'Completed' : `Mark as Done`} {isCompleted && <CheckCircle2 size={16}/>}
                                         </button>
                                     </div>
                                 </div>
@@ -273,53 +313,6 @@ export default function WeeklyReview() {
                     );
                 })}
             </div>
-
-            {/* Quick Stats Summary */}
-            <div className="glass-panel" style={{
-                padding: '1.5rem',
-                borderRadius: 'var(--radius-lg)',
-                marginTop: '1.5rem'
-            }}>
-                <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-                    Quick Overview
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                    <StatBox
-                        label="Active Tasks"
-                        value={tasks.filter(t => !t.isArchived && t.status !== 'done').length}
-                        color="#6366f1"
-                    />
-                    <StatBox
-                        label="Completed"
-                        value={tasks.filter(t => t.status === 'done').length}
-                        color="#10b981"
-                    />
-                    <StatBox
-                        label="Visions"
-                        value={visions.length}
-                        color="#f59e0b"
-                    />
-                    <StatBox
-                        label="Roles"
-                        value={missions.length}
-                        color="#ec4899"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function StatBox({ label, value, color }) {
-    return (
-        <div style={{
-            padding: '1rem',
-            background: 'rgba(255,255,255,0.03)',
-            borderRadius: 'var(--radius-md)',
-            textAlign: 'center'
-        }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color }}>{value}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>{label}</div>
         </div>
     );
 }

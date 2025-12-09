@@ -1,20 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, Clock, Tag, Archive, Target, ListChecks } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 
 export default function TaskCard({ task, onClick, compact = false }) {
-    const { toggleTaskStatus, deleteTask } = useTasks();
+    const { toggleTaskStatus, deleteTask, toggleTimer } = useTasks();
     const { visions = [], values = [] } = useMission();
+
+    // Timer Logic for Card
+    const [elapsed, setElapsed] = useState(task.timeSpent || 0);
+    const isRunning = !!task.timerStartedAt;
+
+    useEffect(() => {
+        let interval;
+        if (isRunning) {
+            const start = new Date(task.timerStartedAt).getTime();
+            setElapsed((task.timeSpent || 0) + (Date.now() - start));
+            interval = setInterval(() => {
+                setElapsed((task.timeSpent || 0) + (Date.now() - start));
+            }, 1000);
+        } else {
+            setElapsed(task.timeSpent || 0);
+        }
+        return () => clearInterval(interval);
+    }, [task.timeSpent, task.timerStartedAt, isRunning]);
+
+    const formatDuration = (ms) => {
+        if (!ms) return "";
+        const minutes = Math.floor((ms / (1000 * 60)) % 60);
+        const hours = Math.floor((ms / (1000 * 60 * 60)));
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
+    };
 
     const handleToggle = (e) => {
         e.stopPropagation();
         toggleTaskStatus(task.id);
     };
 
+    const handleTimer = (e) => {
+        e.stopPropagation();
+        toggleTimer(task.id);
+    };
+
+    const [isExiting, setIsExiting] = useState(false);
+
     const handleArchive = (e) => {
         e.stopPropagation();
-        deleteTask(task.id);
+        setIsExiting(true);
+        setTimeout(() => {
+            deleteTask(task.id);
+        }, 300); // Wait for animation
     };
 
     const isDone = task.status === 'done';
@@ -24,10 +60,15 @@ export default function TaskCard({ task, onClick, compact = false }) {
         ? [...visions, ...values].find(i => i.id === task.missionId)
         : null;
 
+    if (isExiting) {
+        // Return null or empty div to reserve visual space if needed, 
+        // but for smooth removal we usually want the element to stay but fade.
+    }
+
     return (
         <div
             onClick={onClick}
-            className="glass-panel"
+            className={`glass-panel ${isExiting ? 'fade-out-exit' : ''}`}
             style={{
                 padding: compact ? '0.5rem' : '0.75rem',
                 borderRadius: 'var(--radius-md)',
@@ -37,45 +78,60 @@ export default function TaskCard({ task, onClick, compact = false }) {
                 gap: compact ? '0.5rem' : '0.75rem',
                 alignItems: 'center',
                 borderLeft: `3px solid ${getPriorityColor(task)}`,
-                opacity: isDone ? 0.5 : 1,
-                transition: 'all 0.2s',
+                opacity: isExiting ? 0 : (isDone ? 0.5 : 1),
+                transform: isExiting ? 'scale(0.95)' : 'scale(1)',
+                transition: 'all 0.3s ease-out',
                 filter: isDone ? 'grayscale(0.5)' : 'none',
                 position: 'relative',
-                height: compact ? '100%' : 'auto'
+                height: compact ? '100%' : 'auto',
+                background: isRunning ? 'linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent)' : 'rgba(255,255,255,0.03)',
+                pointerEvents: isExiting ? 'none' : 'auto'
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            onMouseEnter={e => !isExiting && (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={e => !isExiting && (e.currentTarget.style.transform = 'translateY(0)')}
         >
-            <button
-                onClick={handleToggle}
-                style={{ background: 'none', border: 'none', color: isDone ? 'var(--color-success)' : 'var(--color-text-muted)', cursor: 'pointer', padding: 0, display: 'flex' }}
-            >
-                {isDone ? <CheckCircle size={compact ? 16 : 18} /> : <Circle size={compact ? 16 : 18} />}
-            </button>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <h4 style={{
                     fontSize: isDone ? '0.8rem' : (compact ? '0.8rem' : '0.9rem'),
-                    marginBottom: compact ? 0 : '0.2rem',
                     fontWeight: 500,
                     textDecoration: isDone ? 'line-through' : 'none',
                     color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-main)',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    lineHeight: compact ? '1.2' : 'normal'
+                    lineHeight: compact ? '1.2' : 'normal',
+                    marginBottom: 0
                 }}>
                     {task.title}
                 </h4>
 
                 {!compact && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                        {/* Timer Control & Time */}
+                        <div 
+                            onClick={handleTimer}
+                            style={{ 
+                                display: 'flex', alignItems: 'center', gap: '0.3rem',
+                                color: isRunning ? '#10b981' : (elapsed > 0 ? 'var(--color-text-main)' : 'var(--color-text-muted)'),
+                                fontWeight: isRunning ? 600 : 400,
+                                cursor: 'pointer',
+                                background: isRunning ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                transition: 'all 0.2s'
+                            }}
+                            title={isRunning ? "Stop Timer" : "Start Timer"}
+                        >
+                             <Clock size={12} className={isRunning ? "animate-pulse" : ""} />
+                             <span>{elapsed > 0 ? formatDuration(elapsed) : "Start"}</span>
+                        </div>
+
                         {task.dueDate && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                <Clock size={10} /> {task.dueDate.slice(5)}
+                                <Clock size={10} style={{ opacity: 0.7 }} /> {task.dueDate.slice(5)}
                             </span>
                         )}
                         {task.context && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                <Tag size={10} /> {task.context}
+                                <Tag size={10} style={{ opacity: 0.7 }} /> {task.context}
                             </span>
                         )}
                         {linkedItem && (

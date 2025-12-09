@@ -1,12 +1,11 @@
 import React from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
-import { useGamification } from '../../../context/GamificationContext';
+import { PieChart, Target, CheckCircle, Clock, Inbox, Compass } from 'lucide-react';
 
 export default function StatsView() {
     const { tasks } = useTasks();
     const { missions, visions, values } = useMission();
-    const { history } = useGamification();
 
     const activeTasks = tasks.filter(t => !t.isArchived);
     const totalTasks = activeTasks.length;
@@ -44,24 +43,58 @@ export default function StatsView() {
     const completedSubtasks = tasksWithSubtasks.reduce((acc, t) => acc + t.subtasks.filter(s => s.completed).length, 0);
 
     return (
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <h3 style={{ marginBottom: '2rem' }}>Productivity Insights</h3>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    <PieChart size={24} style={{ color: '#bae6fd' }} />
+                </div>
+                <div>
+                     <h2 className="text-gradient-primary" style={{ fontSize: '1.75rem', margin: 0 }}>Productivity Insights</h2>
+                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 0 0' }}>Track your performance and alignment.</p>
+                </div>
+            </div>
 
             {/* Top Stats Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                <StatCard title="Completion Rate" value={`${completionRate}%`} sub={`of ${totalTasks} tasks`} color="var(--color-primary)" />
-                <StatCard title="Completed" value={completedTasks} color="#10b981" />
-                <StatCard title="In Progress" value={totalTasks - completedTasks - inboxTasks} color="#f59e0b" />
-                <StatCard title="In Inbox" value={inboxTasks} color="#a855f7" />
-                <StatCard title="Mission Items" value={missions.length + visions.length + values.length} color="#6366f1" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <StatCard 
+                    title="Completion Rate" 
+                    value={`${completionRate}%`} 
+                    sub={`of ${totalTasks} active tasks`} 
+                    color="var(--color-primary)" 
+                    icon={<Target size={20} />}
+                />
+                <StatCard 
+                    title="Completed" 
+                    value={completedTasks} 
+                    color="#10b981" 
+                    icon={<CheckCircle size={20} />}
+                />
+                <StatCard 
+                    title="In Progress" 
+                    value={totalTasks - completedTasks - inboxTasks} 
+                    color="#f59e0b" 
+                    icon={<Clock size={20} />}
+                />
+                <StatCard 
+                    title="In Inbox" 
+                    value={inboxTasks} 
+                    color="#a855f7" 
+                    icon={<Inbox size={20} />}
+                />
+
             </div>
 
             {/* Two Column Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 {/* GTD Context Distribution */}
                 <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-                    <h4 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>📍 GTD Context Distribution</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                         <h4 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>📍</span> Context Distribution
+                         </h4>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {Object.entries(contextCounts).map(([context, count]) => (
                             <ProgressBar
                                 key={context}
@@ -160,24 +193,6 @@ export default function StatsView() {
                 </div>
             </div>
 
-            {/* XP History Log */}
-            <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-                <h4 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>🏆 Recent Achievements</h4>
-                {history.length === 0 ? (
-                    <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '2rem' }}>
-                        No achievements recorded yet. Complete tasks to gain XP!
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
-                        {history.slice(-10).reverse().map(entry => (
-                            <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
-                                <span style={{ fontSize: '0.85rem' }}>{entry.source}</span>
-                                <span style={{ fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>+{entry.amount} XP</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
         </div>
     );
 }
@@ -195,12 +210,43 @@ function getContextColor(context) {
     return colors[context] || '#94a3b8';
 }
 
-function StatCard({ title, value, sub, color }) {
+function StatCard({ title, value, sub, color, icon }) {
     return (
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{title}</span>
-            <span style={{ fontSize: '2.5rem', fontWeight: 700, color: color }}>{value}</span>
-            {sub && <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{sub}</span>}
+        <div className="glass-panel" style={{ 
+            padding: '1.5rem', 
+            borderRadius: 'var(--radius-lg)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            position: 'relative', 
+            overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.05)'
+        }}>
+            <div style={{ 
+                position: 'absolute', 
+                top: '1rem', 
+                right: '1rem', 
+                opacity: 0.1, 
+                color: color, 
+                transform: 'scale(1.5)' 
+            }}>
+                {icon}
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ 
+                    padding: '0.25rem', 
+                    borderRadius: '4px', 
+                    background: `${color}20`, 
+                    display: 'flex', 
+                    color: color 
+                }}>
+                    {icon}
+                </div>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{title}</span>
+            </div>
+            
+            <span style={{ fontSize: '2.5rem', fontWeight: 700, color: 'white', lineHeight: 1 }}>{value}</span>
+            {sub && <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>{sub}</span>}
         </div>
     )
 }

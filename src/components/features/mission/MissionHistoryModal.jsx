@@ -1,24 +1,8 @@
-import React, { useState } from 'react';
-import { useMission } from '../../../context/MissionContext';
-import { History, X, ChevronRight, Clock } from 'lucide-react';
+import React from 'react';
+import { History, X, Clock } from 'lucide-react';
 
-export default function MissionHistory({ missionId, onClose }) {
-    const { missions } = useMission();
-    const mission = missions.find(m => m.id === missionId);
-
-    if (!mission) {
-        return (
-            <div style={{
-                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-            }}>
-                <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', background: '#1e293b' }}>
-                    <p>Mission not found</p>
-                    <button onClick={onClose} className="btn btn-primary">Close</button>
-                </div>
-            </div>
-        );
-    }
+export default function MissionHistoryModal({ mission, onClose }) {
+    if (!mission) return null;
 
     const versions = mission.versions || [];
 
@@ -89,7 +73,7 @@ export default function MissionHistory({ missionId, onClose }) {
                                 CURRENT VERSION
                             </span>
                             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
-                                {new Date(mission.updatedAt).toLocaleDateString()}
+                                {new Date(mission.updatedAt || Date.now()).toLocaleDateString()}
                             </span>
                         </div>
                         <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.6 }}>{mission.text}</p>
