@@ -8,7 +8,7 @@ import {
     Settings,
     ChevronLeft,
     ChevronRight,
-    CircleUser,
+    User,
 } from "lucide-react";
 import { useGoogleCalendar } from "../../hooks/useGoogleCalendar";
 
@@ -160,10 +160,9 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 <NavButton
                     active={activeTab === "settings"}
                     onClick={() => setActiveTab("settings")}
-                    icon={<CircleUser size={20} />}
+                    icon={<User size={20} fill="currentColor" />}
                     label={googleUser?.name || "Name Surname"}
                     collapsed={isCollapsed}
-                // Removed custom style prop to inherit muted text color
                 />
             </div>
         </aside>
