@@ -9,7 +9,7 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    User,
+    CircleUser,
 } from "lucide-react";
 import { useGoogleCalendar } from "../../hooks/useGoogleCalendar";
 
@@ -162,7 +162,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 <NavButton
                     active={activeTab === "settings"}
                     onClick={() => setActiveTab("settings")}
-                    icon={<User size={20} />}
+                    icon={<CircleUser size={20} />}
                     label={googleUser?.name || "Name Surname"}
                     collapsed={isCollapsed}
                 />
