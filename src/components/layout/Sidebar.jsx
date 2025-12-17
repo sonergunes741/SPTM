@@ -9,8 +9,10 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
+    LogIn,
+    User,
 } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useGoogleCalendar } from "../../hooks/useGoogleCalendar";
 
 export default function Sidebar({ activeTab, setActiveTab }) {
@@ -18,10 +20,35 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     const {
         isAuthenticated,
         googleUser,
-        handleLoginSuccess,
-        handleLoginFailure,
         logout,
+        loginUser,
+        handleLoginFailure
     } = useGoogleCalendar();
+
+    const login = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                // Fetch User Info
+                const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                }).then(res => res.json());
+
+                // Prepare user object matching context structure
+                const user = {
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture,
+                    credential: tokenResponse.access_token // Store access token
+                };
+
+                loginUser(user);
+            } catch (error) {
+                console.error("Failed to fetch user info:", error);
+                handleLoginFailure();
+            }
+        },
+        onError: handleLoginFailure,
+    });
 
     return (
         <aside
@@ -150,13 +177,16 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
                 <div style={{ flex: 1 }} /> {/* Spacer */}
 
-                <NavButton
-                    active={activeTab === "settings"}
-                    onClick={() => setActiveTab("settings")}
-                    icon={<Settings size={20} />}
-                    label="Settings"
-                    collapsed={isCollapsed}
-                />
+                {/* Settings Button - Only visible if authenticated */}
+                {isAuthenticated && (
+                    <NavButton
+                        active={activeTab === "settings"}
+                        onClick={() => setActiveTab("settings")}
+                        icon={<Settings size={20} />}
+                        label="Settings"
+                        collapsed={isCollapsed}
+                    />
+                )}
             </nav>
 
             {/* Footer / User Profile */}
@@ -169,7 +199,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     flexDirection: "column",
                     gap: "1rem",
                     alignItems: isCollapsed ? "center" : "stretch",
-                    minHeight: "40px" // prevent empty look
+                    minHeight: "40px"
                 }}
             >
                 {isAuthenticated ? (
@@ -214,23 +244,60 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                                 </div>
                             </div>
                         )}
+                        {/* If collapsed, show logout button */}
+                        {isCollapsed && (
+                            <button
+                                onClick={logout}
+                                title="Log out"
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "var(--color-text-muted)",
+                                    cursor: "pointer",
+                                    padding: "4px"
+                                }}
+                            >
+                                <LogOut size={16} />
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div style={{
                         width: "100%",
                         display: "flex",
-                        justifyContent: isCollapsed ? "center" : "center",
-                        overflow: "hidden"
+                        justifyContent: "center",
                     }}>
-                        <GoogleLogin
-                            onSuccess={handleLoginSuccess}
-                            onError={handleLoginFailure}
-                            type={isCollapsed ? "icon" : "standard"}
-                            theme="filled_black"
-                            shape="circle"
-                            text="signin_with"
-                            width={isCollapsed ? undefined : "240"} // Standard width
-                        />
+                        <button
+                            onClick={() => login()}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: isCollapsed ? "0" : "0.75rem",
+                                width: isCollapsed ? "40px" : "100%",
+                                height: isCollapsed ? "40px" : "auto",
+                                padding: isCollapsed ? "0" : "0.75rem 1rem",
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                borderRadius: isCollapsed ? "50%" : "var(--radius-md)",
+                                color: "var(--color-text-main)",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                fontSize: "0.9rem",
+                                fontWeight: 600
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                                e.currentTarget.style.borderColor = "var(--color-primary)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                            }}
+                        >
+                            <LogIn size={18} />
+                            {!isCollapsed && "Log In"}
+                        </button>
                     </div>
                 )}
             </div>

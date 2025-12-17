@@ -41,7 +41,7 @@ export function GoogleCalendarProvider({ children }) {
     };
   }, []);
 
-  // Handle successful login
+  // Handle successful login (Legacy/Standard GoogleLogin Component)
   const handleLoginSuccess = useCallback((credentialResponse) => {
     try {
       console.log("Login successful:", credentialResponse);
@@ -79,6 +79,16 @@ export function GoogleCalendarProvider({ children }) {
     }
   }, []);
 
+  // Manual Login (for custom hooks like useGoogleLogin)
+  const loginUser = useCallback((user) => {
+    setGoogleUser(user);
+    setIsAuthenticated(true);
+    setError(null);
+    if (user.credential) {
+      localStorage.setItem("googleCalendarToken", user.credential);
+    }
+  }, []);
+
   // Handle login failure
   const handleLoginFailure = useCallback(() => {
     setError("Failed to authenticate with Google");
@@ -95,6 +105,11 @@ export function GoogleCalendarProvider({ children }) {
 
       setIsLoading(true);
       try {
+        // GAPI client initialized?
+        if (!window.gapi.client.calendar) {
+          throw new Error("Google Calendar API not loaded yet.");
+        }
+
         const response = await window.gapi.client.calendar.events.list({
           calendarId: "primary",
           timeMin: timeMin || new Date().toISOString(),
@@ -251,6 +266,7 @@ export function GoogleCalendarProvider({ children }) {
         auth2.signOut();
       }
     }
+    // Also revoke token manually if needed, but simple clearing state is enough for UI
     setIsAuthenticated(false);
     setGoogleUser(null);
     setCalendarEvents([]);
@@ -265,6 +281,7 @@ export function GoogleCalendarProvider({ children }) {
     error,
     handleLoginSuccess,
     handleLoginFailure,
+    loginUser, // Exposed for custom login
     fetchCalendarEvents,
     createCalendarEvent,
     updateCalendarEvent,
