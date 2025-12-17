@@ -147,8 +147,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 />
             </nav>
 
-            {/* Footer Divider is handled by margin/border in container below */}
-
             {/* Footer / User Profile & Settings */}
             <div
                 style={{
@@ -160,31 +158,21 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     gap: "0.5rem",
                 }}
             >
-                {/* Logout Button - Standard Color */}
+                {/* User Info (Opens Settings) */}
+                <NavButton
+                    active={activeTab === "settings"}
+                    onClick={() => setActiveTab("settings")}
+                    icon={<User size={20} />}
+                    label={googleUser?.name || "Name Surname"}
+                    collapsed={isCollapsed}
+                />
+
+                {/* Logout Button */}
                 <NavButton
                     active={false}
                     onClick={logout}
                     icon={<LogOut size={20} />}
                     label="Log out"
-                    collapsed={isCollapsed}
-                />
-
-                {/* User Info - As NavButton for alignment */}
-                <NavButton
-                    active={false} // Always inactive style (muted)
-                    onClick={() => { }} // No action for now
-                    icon={<User size={20} />}
-                    label={googleUser?.name || "User"}
-                    collapsed={isCollapsed}
-                    style={{ cursor: "default" }} // Not clickable cursor
-                />
-
-                {/* Settings Button */}
-                <NavButton
-                    active={activeTab === "settings"}
-                    onClick={() => setActiveTab("settings")}
-                    icon={<Settings size={20} />}
-                    label="Settings"
                     collapsed={isCollapsed}
                 />
             </div>
@@ -219,13 +207,13 @@ function NavButton({ active, onClick, icon, label, collapsed, style }) {
                 ...style
             }}
             onMouseEnter={(e) => {
-                if (!active && style?.cursor !== "default") {
+                if (!active) {
                     e.currentTarget.style.color = "var(--color-text-main)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.03)";
                 }
             }}
             onMouseLeave={(e) => {
-                if (!active && style?.cursor !== "default") {
+                if (!active) {
                     e.currentTarget.style.color = "var(--color-text-muted)";
                     e.currentTarget.style.background = "transparent";
                 }
@@ -237,7 +225,7 @@ function NavButton({ active, onClick, icon, label, collapsed, style }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: "20px" // Fixed width for icon container to ensure perfect alignment
+                width: "20px"
             }}>
                 {icon}
             </span>

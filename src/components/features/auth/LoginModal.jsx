@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Mail, Lock, User, ArrowRight, Chrome } from "lucide-react"; // Chrome icon for Google generic usage or standard img
+import { X, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useGoogleCalendar } from "../../../hooks/useGoogleCalendar";
 
@@ -50,19 +50,36 @@ export default function LoginModal({ isOpen, onClose }) {
         setIsLoading(true);
 
         // MOCK LOGIN / SIGNUP LOGIC
-        // In a real app, this would verify credentials with a backend
         setTimeout(() => {
-            const mockUser = {
-                name: isSignUp ? formData.name : "Demo User",
-                email: formData.email,
-                picture: null, // Placeholder will be used
-                credential: "mock-token",
-            };
-
-            loginUser(mockUser);
+            if (!isSignUp) {
+                // Login Logic
+                if (formData.email === "admin" && formData.password === "1234") {
+                    const mockUser = {
+                        name: "Name Surname",
+                        email: "admin@sptm.app",
+                        picture: null,
+                        credential: "mock-admin-token",
+                    };
+                    loginUser(mockUser);
+                    onClose();
+                } else {
+                    alert("Invalid credentials! Try admin / 1234");
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                // Signup Logic (Mock always success)
+                const mockUser = {
+                    name: formData.name,
+                    email: formData.email,
+                    picture: null,
+                    credential: "mock-token",
+                };
+                loginUser(mockUser);
+                onClose();
+            }
             setIsLoading(false);
-            onClose();
-        }, 1000); // Simulate network delay
+        }, 1000);
     };
 
     if (!isOpen) return null;
@@ -193,8 +210,8 @@ export default function LoginModal({ isOpen, onClose }) {
                             }}
                         />
                         <input
-                            type="email"
-                            placeholder="Email"
+                            type="text"
+                            placeholder="Email or Username"
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
