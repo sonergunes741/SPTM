@@ -168,11 +168,11 @@ export default function WelcomePage() {
                     </button>
                 </div>
 
-                {/* Feature Highlights - Updated */}
-                <div style={{ marginTop: "6rem", display: "flex", gap: "4rem", opacity: 0.4 }}>
-                    <FeatureItem icon={<CheckCircle2 size={18} />} text="GTD Workflow" />
-                    <FeatureItem icon={<LayoutGrid size={18} />} text="Covey's Matrix" />
-                    <FeatureItem icon={<Compass size={18} />} text="Personal Compass" />
+                {/* Feature Highlights - Updated opacity and size */}
+                <div style={{ marginTop: "6rem", display: "flex", gap: "4rem", opacity: 0.65 }}>
+                    <FeatureItem icon={<CheckCircle2 size={20} />} text="GTD Workflow" />
+                    <FeatureItem icon={<LayoutGrid size={20} />} text="Covey's Matrix" />
+                    <FeatureItem icon={<Compass size={20} />} text="Personal Compass" />
                 </div>
             </main>
 
@@ -187,7 +187,7 @@ export default function WelcomePage() {
 
 function FeatureItem({ icon, text }) {
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--color-text-muted)", fontSize: "0.9rem", letterSpacing: "0.02em" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--color-text-muted)", fontSize: "1rem", letterSpacing: "0.02em" }}>
             {icon}
             <span style={{ fontWeight: 500 }}>{text}</span>
         </div>
