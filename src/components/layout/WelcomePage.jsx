@@ -26,7 +26,7 @@ export default function WelcomePage() {
                     left: "-10%",
                     width: "50%",
                     height: "50%",
-                    background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(15,23,42,0) 70%)",
+                    background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(15,23,42,0) 70%)", // Reduced opacity for subtlety
                     borderRadius: "50%",
                     pointerEvents: "none",
                 }}
@@ -38,7 +38,7 @@ export default function WelcomePage() {
                     right: "-10%",
                     width: "60%",
                     height: "60%",
-                    background: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(15,23,42,0) 70%)",
+                    background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, rgba(15,23,42,0) 70%)", // Reduced opacity for subtlety
                     borderRadius: "50%",
                     pointerEvents: "none",
                 }}
@@ -54,29 +54,34 @@ export default function WelcomePage() {
                     zIndex: 10,
                 }}
             >
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.05em" }} className="text-gradient-primary">
-                    SPTM
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    <div style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.05em", lineHeight: "1" }} className="text-gradient-primary">
+                        SPTM
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginTop: "0.35rem", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                        Smart Personal Task Manager
+                    </div>
                 </div>
                 <button
                     onClick={() => setShowLoginModal(true)}
                     style={{
                         padding: "0.6rem 1.5rem",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        background: "rgba(255, 255, 255, 0.03)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
                         borderRadius: "var(--radius-full)",
-                        color: "#fff",
+                        color: "rgba(255,255,255,0.8)",
                         cursor: "pointer",
                         fontSize: "0.9rem",
                         fontWeight: 500,
                         transition: "all 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-                        e.currentTarget.style.borderColor = "#fff";
+                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                        e.currentTarget.style.color = "#fff";
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
+                        e.currentTarget.style.color = "rgba(255,255,255,0.8)";
                     }}
                 >
                     Sign In
@@ -97,30 +102,13 @@ export default function WelcomePage() {
                 }}
                 className="fade-in"
             >
-                <div
-                    style={{
-                        marginBottom: "1.5rem",
-                        padding: "0.5rem 1rem",
-                        background: "rgba(99, 102, 241, 0.1)",
-                        border: "1px solid rgba(99, 102, 241, 0.2)",
-                        borderRadius: "var(--radius-full)",
-                        color: "#818cf8",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                    }}
-                >
-                    <span style={{ width: "8px", height: "8px", background: "#818cf8", borderRadius: "50%" }} />
-                    System v2.0 Live
-                </div>
+                {/* Badge removed as requested */}
 
                 <h1
                     style={{
-                        fontSize: "5rem",
+                        fontSize: "5rem", // Kept large for impact
                         fontWeight: 800,
-                        letterSpacing: "-0.03em",
+                        letterSpacing: "-0.04em",
                         lineHeight: 1.1,
                         marginBottom: "1.5rem",
                         background: "linear-gradient(135deg, #fff 0%, #94a3b8 100%)",
@@ -129,27 +117,28 @@ export default function WelcomePage() {
                         maxWidth: "900px",
                     }}
                 >
-                    Master your workflow. <br /> Not just your tasks.
+                    Clarity & Focus.
                 </h1>
 
                 <p
                     style={{
                         fontSize: "1.25rem",
                         color: "var(--color-text-muted)",
-                        maxWidth: "600px",
+                        maxWidth: "550px",
                         lineHeight: 1.6,
-                        marginBottom: "3rem",
+                        marginBottom: "3.5rem",
+                        fontWeight: 400,
                     }}
                 >
-                    An elite personal management system designed for high performers.
-                    Mission, Calendar, and Insights in one seamless interface.
+                    The essential tool for personal management.<br />
+                    Align daily actions with your vision.
                 </p>
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button
                         onClick={() => setShowLoginModal(true)}
                         style={{
-                            padding: "1rem 2.5rem",
+                            padding: "1rem 3rem",
                             background: "#fff",
                             color: "#0f172a",
                             borderRadius: "var(--radius-full)",
@@ -160,21 +149,27 @@ export default function WelcomePage() {
                             display: "flex",
                             alignItems: "center",
                             gap: "0.5rem",
-                            transition: "transform 0.2s",
-                            boxShadow: "0 10px 25px -5px rgba(255, 255, 255, 0.2)",
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            boxShadow: "0 20px 40px -10px rgba(255, 255, 255, 0.15)",
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 25px 50px -10px rgba(255, 255, 255, 0.25)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 20px 40px -10px rgba(255, 255, 255, 0.15)";
+                        }}
                     >
-                        Get Started <ArrowRight size={20} />
+                        Get Started <ArrowRight size={18} />
                     </button>
                 </div>
 
-                {/* Feature Highlights Mockup */}
-                <div style={{ marginTop: "5rem", display: "flex", gap: "3rem", opacity: 0.6 }}>
-                    <FeatureItem icon={<CheckCircle2 />} text="GTD Workflow" />
-                    <FeatureItem icon={<Layout />} text="Mission Control" />
-                    <FeatureItem icon={<ShieldCheck />} text="Secure & Private" />
+                {/* Feature Highlights - Simplified */}
+                <div style={{ marginTop: "6rem", display: "flex", gap: "4rem", opacity: 0.4 }}>
+                    <FeatureItem icon={<CheckCircle2 size={18} />} text="GTD Workflow" />
+                    <FeatureItem icon={<Layout size={18} />} text="Mission Control" />
+                    <FeatureItem icon={<ShieldCheck size={18} />} text="Secure" />
                 </div>
             </main>
 
@@ -185,7 +180,7 @@ export default function WelcomePage() {
 
 function FeatureItem({ icon, text }) {
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-muted)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--color-text-muted)", fontSize: "0.9rem", letterSpacing: "0.02em" }}>
             {icon}
             <span style={{ fontWeight: 500 }}>{text}</span>
         </div>
