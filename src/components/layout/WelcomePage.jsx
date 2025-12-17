@@ -3,7 +3,11 @@ import LoginModal from "../features/auth/LoginModal";
 import { ArrowRight, CheckCircle2, Layout, ShieldCheck } from "lucide-react";
 
 export default function WelcomePage() {
-    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [authModal, setAuthModal] = useState({ isOpen: false, view: "login" });
+
+    const openLogin = () => setAuthModal({ isOpen: true, view: "login" });
+    const openSignup = () => setAuthModal({ isOpen: true, view: "signup" });
+    const closeModal = () => setAuthModal({ ...authModal, isOpen: false });
 
     return (
         <div
@@ -26,7 +30,7 @@ export default function WelcomePage() {
                     left: "-10%",
                     width: "50%",
                     height: "50%",
-                    background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(15,23,42,0) 70%)", // Reduced opacity for subtlety
+                    background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(15,23,42,0) 70%)",
                     borderRadius: "50%",
                     pointerEvents: "none",
                 }}
@@ -38,7 +42,7 @@ export default function WelcomePage() {
                     right: "-10%",
                     width: "60%",
                     height: "60%",
-                    background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, rgba(15,23,42,0) 70%)", // Reduced opacity for subtlety
+                    background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, rgba(15,23,42,0) 70%)",
                     borderRadius: "50%",
                     pointerEvents: "none",
                 }}
@@ -55,15 +59,16 @@ export default function WelcomePage() {
                 }}
             >
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.05em", lineHeight: "1" }} className="text-gradient-primary">
+                    {/* Logo styled to match Sidebar exactly (adjusted size/weight) */}
+                    <div style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: "1.2", paddingBottom: "2px" }} className="text-gradient-primary">
                         SPTM
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginTop: "0.35rem", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginTop: "0.1rem", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                         Smart Personal Task Manager
                     </div>
                 </div>
                 <button
-                    onClick={() => setShowLoginModal(true)}
+                    onClick={openLogin}
                     style={{
                         padding: "0.6rem 1.5rem",
                         background: "rgba(255, 255, 255, 0.03)",
@@ -102,22 +107,21 @@ export default function WelcomePage() {
                 }}
                 className="fade-in"
             >
-                {/* Badge removed as requested */}
-
                 <h1
                     style={{
-                        fontSize: "5rem", // Kept large for impact
+                        fontSize: "5rem",
                         fontWeight: 800,
                         letterSpacing: "-0.04em",
-                        lineHeight: 1.1,
-                        marginBottom: "1.5rem",
+                        lineHeight: 1.2, // Increased line height to prevent 'y' cutoff
+                        paddingBottom: "0.2em", // Extra padding for gradient text
+                        marginBottom: "1rem",
                         background: "linear-gradient(135deg, #fff 0%, #94a3b8 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         maxWidth: "900px",
                     }}
                 >
-                    Clarity & Focus.
+                    Clarity & Focus
                 </h1>
 
                 <p
@@ -136,7 +140,7 @@ export default function WelcomePage() {
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button
-                        onClick={() => setShowLoginModal(true)}
+                        onClick={openSignup}
                         style={{
                             padding: "1rem 3rem",
                             background: "#fff",
@@ -173,7 +177,11 @@ export default function WelcomePage() {
                 </div>
             </main>
 
-            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+            <LoginModal
+                isOpen={authModal.isOpen}
+                onClose={closeModal}
+                initialView={authModal.view}
+            />
         </div>
     );
 }

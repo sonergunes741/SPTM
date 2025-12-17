@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useGoogleCalendar } from "../../../hooks/useGoogleCalendar";
 
-export default function LoginModal({ isOpen, onClose }) {
-    const [isSignUp, setIsSignUp] = useState(false);
+export default function LoginModal({ isOpen, onClose, initialView = "login" }) {
+    const [isSignUp, setIsSignUp] = useState(initialView === "signup");
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -13,6 +13,13 @@ export default function LoginModal({ isOpen, onClose }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const { loginUser, handleLoginFailure } = useGoogleCalendar();
+
+    // Reset view when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setIsSignUp(initialView === "signup");
+        }
+    }, [isOpen, initialView]);
 
     // Google Login Hook
     const googleLogin = useGoogleLogin({
@@ -156,7 +163,7 @@ export default function LoginModal({ isOpen, onClose }) {
                         SPTM
                     </h2>
                     <p style={{ color: "var(--color-text-muted)" }}>
-                        {isSignUp ? "Create your account" : "Welcome!"}
+                        {isSignUp ? "Create your account" : "Welcome Back"}
                     </p>
                 </div>
 
@@ -293,7 +300,7 @@ export default function LoginModal({ isOpen, onClose }) {
                             border: "1px solid rgba(255,255,255,0.1)",
                             borderRadius: "var(--radius-md)",
                             color: "#fff",
-                            fontSize: "1rem", // Slightly larger font
+                            fontSize: "1rem",
                             fontWeight: 600,
                             cursor: isLoading ? "wait" : "pointer",
                             display: "flex",
@@ -301,7 +308,7 @@ export default function LoginModal({ isOpen, onClose }) {
                             justifyContent: "center",
                             gap: "0.5rem",
                             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                            boxShadow: "0 4px 20px -5px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2)", // PRIMARY GLOW EFFECT
+                            boxShadow: "0 4px 20px -5px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2)",
                             marginTop: "0.5rem"
                         }}
                         onMouseEnter={(e) => {
