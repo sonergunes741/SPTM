@@ -289,19 +289,28 @@ export default function LoginModal({ isOpen, onClose }) {
                         style={{
                             width: "100%",
                             padding: "0.85rem",
-                            background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)",
-                            border: "none",
+                            background: "linear-gradient(135deg, var(--color-primary) 0%, #a855f7 100%)",
+                            border: "1px solid rgba(255,255,255,0.1)",
                             borderRadius: "var(--radius-md)",
                             color: "#fff",
-                            fontSize: "0.95rem",
+                            fontSize: "1rem", // Slightly larger font
                             fontWeight: 600,
                             cursor: isLoading ? "wait" : "pointer",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             gap: "0.5rem",
-                            transition: "opacity 0.2s",
-                            opacity: isLoading ? 0.7 : 1,
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            boxShadow: "0 4px 20px -5px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2)", // PRIMARY GLOW EFFECT
+                            marginTop: "0.5rem"
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "0 8px 25px -5px rgba(99, 102, 241, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.4)";
+                            e.currentTarget.style.transform = "translateY(-1px) scale(1.01)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "0 4px 20px -5px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.2)";
+                            e.currentTarget.style.transform = "translateY(0) scale(1)";
                         }}
                     >
                         {isLoading ? "Processing..." : isSignUp ? "Sign Up" : "Log In"}

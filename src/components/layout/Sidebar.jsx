@@ -160,7 +160,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 <NavButton
                     active={activeTab === "settings"}
                     onClick={() => setActiveTab("settings")}
-                    icon={<User size={20} fill="currentColor" />}
+                    icon={<User size={20} />}
                     label={googleUser?.name || "Name Surname"}
                     collapsed={isCollapsed}
                 />
@@ -178,7 +178,7 @@ function NavButton({ active, onClick, icon, label, collapsed, style }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: collapsed ? "center" : "flex-start",
-                gap: collapsed ? "0" : "1rem",
+                gap: collapsed ? "0" : "0.75rem", // Optimized gap for consistency
                 padding: "0.85rem 1rem",
                 border: "none",
                 background: active ? "linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent)" : "transparent",
@@ -214,7 +214,7 @@ function NavButton({ active, onClick, icon, label, collapsed, style }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: "20px"
+                width: "24px" // Standardized icon container width
             }}>
                 {icon}
             </span>
