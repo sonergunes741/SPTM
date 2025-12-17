@@ -7,6 +7,8 @@ import {
   Archive,
   Inbox,
   RefreshCcw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import MissionView from "./components/features/mission/MissionView";
 import CoveyMatrix from "./components/features/tasks/CoveyMatrix";
@@ -28,6 +30,7 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { updateTask, tasks } = useTasks();
   const [activeDragId, setActiveDragId] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -77,32 +80,83 @@ function App() {
         <aside
           className="glass-panel"
           style={{
-            width: "280px",
-            padding: "2rem",
+            width: isSidebarCollapsed ? "80px" : "280px",
+            padding: isSidebarCollapsed ? "2rem 1rem" : "2rem",
             display: "flex",
             flexDirection: "column",
             zIndex: 10,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            position: "relative",
           }}
         >
+          {/* Toggle Button */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            style={{
+              position: "absolute",
+              top: "1.5rem",
+              right: isSidebarCollapsed ? "50%" : "1rem",
+              transform: isSidebarCollapsed ? "translateX(50%)" : "none",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "50%",
+              width: "24px",
+              height: "24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "var(--color-text-muted)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.color = "var(--color-text-main)";
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.color = "var(--color-text-muted)";
+            }}
+          >
+            {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
+
           <div
-            style={{ marginBottom: "3rem", cursor: "pointer" }}
+            style={{ 
+              marginBottom: "3rem", 
+              cursor: "pointer",
+              textAlign: isSidebarCollapsed ? "center" : "left",
+              marginTop: isSidebarCollapsed ? "2rem" : "0" // Butonla çakışmaması için
+            }}
             onClick={() => setActiveTab("dashboard")}
           >
             <h1
               className="text-gradient-primary"
               style={{
-                fontSize: "2rem",
+                fontSize: isSidebarCollapsed ? "1.5rem" : "2rem",
                 letterSpacing: "-0.03em",
-                marginBottom: "0.25rem"
+                marginBottom: "0.25rem",
+                transition: "all 0.3s ease",
               }}
             >
-              SPTM
+              {isSidebarCollapsed ? "S" : "SPTM"}
             </h1>
-            <p
-              style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", fontWeight: 500 }}
-            >
-              Smart Personal Task Manager
-            </p>
+            {!isSidebarCollapsed && (
+              <p
+                style={{ 
+                  color: "var(--color-text-muted)", 
+                  fontSize: "0.85rem", 
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  opacity: 1,
+                  transition: "opacity 0.2s ease",
+                }}
+              >
+                Smart Personal Task Manager
+              </p>
+            )}
           </div>
 
           <nav
@@ -113,6 +167,7 @@ function App() {
               onClick={() => setActiveTab("dashboard")}
               icon={<LayoutDashboard size={20} />}
               label="Dashboard"
+              collapsed={isSidebarCollapsed}
             />
             <NavButton
               active={activeTab === "mission"}
@@ -130,24 +185,28 @@ function App() {
                 </svg>
               }
               label="My Mission"
+              collapsed={isSidebarCollapsed}
             />
             <NavButton
               active={activeTab === "calendar"}
               onClick={() => setActiveTab("calendar")}
               icon={<CalendarIcon size={20} />}
               label="Calendar"
+              collapsed={isSidebarCollapsed}
             />
             <NavButton
               active={activeTab === "stats"}
               onClick={() => setActiveTab("stats")}
               icon={<PieChart size={20} />}
               label="Insights"
+              collapsed={isSidebarCollapsed}
             />
             <NavButton
               active={activeTab === "archive"}
               onClick={() => setActiveTab("archive")}
               icon={<Archive size={20} />}
               label="Archive"
+              collapsed={isSidebarCollapsed}
             />
 
             <div
@@ -158,16 +217,23 @@ function App() {
                 color: "var(--color-text-muted)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
+                textAlign: isSidebarCollapsed ? "center" : "left",
+                opacity: isSidebarCollapsed ? 0 : 1, // Hide title when collapsed but keep spacing? Or just hide content
+                display: isSidebarCollapsed ? "none" : "block"
               }}
             >
               GTD Tools
             </div>
+
+            {/* Separator for collapsed functionality visual clarity if needed, but spacing is cleaner */}
+            {isSidebarCollapsed && <div style={{ height: "1rem" }} />}
 
             <NavButton
               active={activeTab === "review"}
               onClick={() => setActiveTab("review")}
               icon={<RefreshCcw size={20} />}
               label="Weekly Review"
+              collapsed={isSidebarCollapsed}
             />
           </nav>
 
@@ -175,10 +241,16 @@ function App() {
             style={{
               marginTop: "auto",
               paddingTop: "1.5rem",
-              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+              borderTop: isSidebarCollapsed ? "none" : "1px solid rgba(255, 255, 255, 0.1)",
+              display: "flex",
+              justifyContent: "center"
             }}
           >
-            {activeTab === "calendar" && <GoogleCalendarLogin />}
+            {activeTab === "calendar" && !isSidebarCollapsed && <GoogleCalendarLogin />}
+            {activeTab === "calendar" && isSidebarCollapsed && (
+                // Simplified icon for login state if needed, or just hide
+                <div title="Google Calendar Actions" style={{ width: "8px", height: "8px", background: "var(--color-success)", borderRadius: "50%" }} />
+            )}
           </div>
         </aside>
 
@@ -221,6 +293,10 @@ function App() {
                   ? "Archived Tasks"
                   : activeTab === "review"
                   ? "Weekly Review"
+                  : activeTab === "mission"
+                  ? "My Mission"
+                  : activeTab === "context"
+                  ? "Contexts"
                   : activeTab}
               </h2>
               <p style={{ color: "var(--color-text-muted)" }}>
@@ -314,28 +390,32 @@ function App() {
   );
 }
 
-function NavButton({ active, onClick, icon, label }) {
+function NavButton({ active, onClick, icon, label, collapsed }) {
   return (
     <button
       onClick={onClick}
+      title={collapsed ? label : ""}
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "1rem",
+        justifyContent: collapsed ? "center" : "flex-start",
+        gap: collapsed ? "0" : "1rem",
         padding: "0.85rem 1rem",
         border: "none",
         background: active ? "linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent)" : "transparent",
         color: active ? "#a855f7" : "var(--color-text-muted)",
-        borderLeft: active ? "3px solid #a855f7" : "3px solid transparent",
-        borderRadius: "0 var(--radius-md) var(--radius-md) 0",
+        borderLeft: active && !collapsed ? "3px solid #a855f7" : "3px solid transparent",
+        // When collapsed, show border bottom or just box shadow? let's stick to no border or maybe right border?
+        // Actually, for collapsed, a subtle glow or background is meaningful enough.
+        borderRadius: collapsed ? "var(--radius-md)" : "0 var(--radius-md) var(--radius-md) 0",
         cursor: "pointer",
         fontSize: "0.95rem",
         fontWeight: active ? 600 : 500,
         transition: "all 0.2s ease",
         textAlign: "left",
         width: "100%",
-        marginLeft: "-1rem",
-        paddingLeft: "2rem"
+        marginLeft: collapsed ? "0" : "-1rem",
+        paddingLeft: collapsed ? "1rem" : "2rem",
       }}
       onMouseEnter={(e) => {
         if (!active) {
@@ -350,8 +430,20 @@ function NavButton({ active, onClick, icon, label }) {
         }
       }}
     >
-      <span style={{ opacity: active ? 1 : 0.7, transition: 'opacity 0.2s' }}>{icon}</span>
-      {label}
+      <span style={{ 
+          opacity: active ? 1 : 0.7, 
+          transition: 'opacity 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+      }}>
+          {icon}
+      </span>
+      {!collapsed && (
+          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {label}
+          </span>
+      )}
     </button>
   );
 }
