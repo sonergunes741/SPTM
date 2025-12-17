@@ -6,7 +6,6 @@ import {
     PieChart,
     Archive,
     Settings,
-    LogOut,
     ChevronLeft,
     ChevronRight,
     CircleUser,
@@ -18,7 +17,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
     const {
         googleUser,
-        logout,
     } = useGoogleCalendar();
 
     return (
@@ -165,15 +163,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     icon={<CircleUser size={20} />}
                     label={googleUser?.name || "Name Surname"}
                     collapsed={isCollapsed}
-                />
-
-                {/* Logout Button */}
-                <NavButton
-                    active={false}
-                    onClick={logout}
-                    icon={<LogOut size={20} />}
-                    label="Log out"
-                    collapsed={isCollapsed}
+                // Removed custom style prop to inherit muted text color
                 />
             </div>
         </aside>
@@ -214,7 +204,7 @@ function NavButton({ active, onClick, icon, label, collapsed, style }) {
             }}
             onMouseLeave={(e) => {
                 if (!active) {
-                    e.currentTarget.style.color = "var(--color-text-muted)";
+                    e.currentTarget.style.color = style?.color || "var(--color-text-muted)";
                     e.currentTarget.style.background = "transparent";
                 }
             }}
