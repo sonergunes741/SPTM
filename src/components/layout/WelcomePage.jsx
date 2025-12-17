@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import LoginModal from "../features/auth/LoginModal";
-import { ArrowRight, CheckCircle2, Layout, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, LayoutGrid, Compass } from "lucide-react";
 
 export default function WelcomePage() {
     const [authModal, setAuthModal] = useState({ isOpen: false, view: "login" });
@@ -59,7 +59,6 @@ export default function WelcomePage() {
                 }}
             >
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                    {/* Logo styled to match Sidebar exactly (adjusted size/weight) */}
                     <div style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: "1.2", paddingBottom: "2px" }} className="text-gradient-primary">
                         SPTM
                     </div>
@@ -112,8 +111,8 @@ export default function WelcomePage() {
                         fontSize: "5rem",
                         fontWeight: 800,
                         letterSpacing: "-0.04em",
-                        lineHeight: 1.2, // Increased line height to prevent 'y' cutoff
-                        paddingBottom: "0.2em", // Extra padding for gradient text
+                        lineHeight: 1.2,
+                        paddingBottom: "0.2em",
                         marginBottom: "1rem",
                         background: "linear-gradient(135deg, #fff 0%, #94a3b8 100%)",
                         WebkitBackgroundClip: "text",
@@ -169,11 +168,11 @@ export default function WelcomePage() {
                     </button>
                 </div>
 
-                {/* Feature Highlights - Simplified */}
+                {/* Feature Highlights - Updated */}
                 <div style={{ marginTop: "6rem", display: "flex", gap: "4rem", opacity: 0.4 }}>
                     <FeatureItem icon={<CheckCircle2 size={18} />} text="GTD Workflow" />
-                    <FeatureItem icon={<Layout size={18} />} text="Mission Control" />
-                    <FeatureItem icon={<ShieldCheck size={18} />} text="Secure" />
+                    <FeatureItem icon={<LayoutGrid size={18} />} text="Covey's Matrix" />
+                    <FeatureItem icon={<Compass size={18} />} text="Personal Compass" />
                 </div>
             </main>
 

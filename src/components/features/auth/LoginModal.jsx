@@ -218,7 +218,7 @@ export default function LoginModal({ isOpen, onClose, initialView = "login" }) {
                         />
                         <input
                             type="text"
-                            placeholder="Email or Username"
+                            placeholder="Email"
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
