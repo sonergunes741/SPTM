@@ -409,7 +409,7 @@ function DraggableMatrixItem({ task, viewMode, onClick }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <TaskCard task={task} compact={false} onClick={onClick} />
+            <TaskCard task={task} compact={viewMode === 'list'} onClick={onClick} />
         </div>
     );
 }
