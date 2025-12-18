@@ -180,7 +180,7 @@ export default function NotificationsWidget() {
                                 color: 'var(--color-text-muted)'
                             }}>
                                 <CheckCircle size={32} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
-                                <p style={{ margin: 0, fontSize: '0.9rem' }}>All caught up! 🎉</p>
+                                <p style={{ margin: 0, fontSize: '0.9rem' }}>All caught up!</p>
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

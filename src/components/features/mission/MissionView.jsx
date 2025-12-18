@@ -430,7 +430,7 @@ function MissionCard({ mission, isRoot }) {
                 </div>
             </div>
 
-            {/* Sub-Missions / Roles Grid */}
+            {/* Submissions Grid */}
             <div style={{
                 marginTop: '1.5rem',
                 paddingTop: '1.5rem',
@@ -440,7 +440,7 @@ function MissionCard({ mission, isRoot }) {
                 gap: '1rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>Roles & Key Areas</h4>
+                    <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>Submissions</h4>
                     <button
                         className="btn btn-ghost"
                         onClick={() => setIsAddingChild(true)}
@@ -454,7 +454,7 @@ function MissionCard({ mission, isRoot }) {
                             borderRadius: '50%',
                             background: 'rgba(255,255,255,0.1)'
                         }}
-                        title="Add Role"
+                        title="Add Submission"
                     >
                         <Plus size={14} />
                     </button>
@@ -467,7 +467,7 @@ function MissionCard({ mission, isRoot }) {
                             type="text"
                             value={newRoleText}
                             onChange={e => setNewRoleText(e.target.value)}
-                            placeholder="Enter Role Name (e.g. Senior Developer)"
+                            placeholder="Enter Submission (e.g. Complete project report)"
                             style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
                             onKeyDown={e => e.key === 'Enter' && handleAddChild()}
                         />
@@ -484,7 +484,7 @@ function MissionCard({ mission, isRoot }) {
 
                 {subMissions.length === 0 && !isAddingChild && (
                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '0.5rem 0' }}>
-                        No roles defined yet. Click + to add.
+                        No submissions defined yet. Click + to add.
                     </div>
                 )}
             </div>

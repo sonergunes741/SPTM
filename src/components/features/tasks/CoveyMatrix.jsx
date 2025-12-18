@@ -5,7 +5,7 @@ import TaskCard from './TaskCard';
 import TaskDetailModal from './TaskDetailModal';
 import QuickInboxModal from '../inbox/QuickInboxModal';
 import ContextManagerModal from './ContextManagerModal';
-import { Plus, X, LayoutGrid, List, Zap, Filter, Mic, Settings } from 'lucide-react';
+import { Plus, X, LayoutGrid, List, Zap, Filter, Mic, Settings, Target, ChevronDown, Link2, CornerDownRight, Flame, Star } from 'lucide-react';
 import useVoiceInput from '../../../hooks/useVoiceInput';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -18,7 +18,37 @@ export default function CoveyMatrix() {
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
     const [showContextManager, setShowContextManager] = useState(false);
+    const [prefilledTitle, setPrefilledTitle] = useState(''); // For Quick Inbox capture selection
+    const [selectedCaptureId, setSelectedCaptureId] = useState(null); // To track which capture is being converted
     const containerRef = useRef(null);
+
+    // Handle capture selection from Quick Inbox
+    const handleCaptureSelect = (captureTitle, captureId) => {
+        setPrefilledTitle(captureTitle);
+        setSelectedCaptureId(captureId); // Store the capture task ID
+        setShowQuickInbox(false);
+        setShowForm(true);
+    };
+
+    // Track which captures have been converted to tasks (local state, doesn't affect tasks array)
+    const [convertedCaptureIds, setConvertedCaptureIds] = useState([]);
+
+    // Handle task save - just add capture ID to converted list
+    const handleTaskSave = (taskData) => {
+        const captureId = selectedCaptureId;
+
+        // Add the new task
+        addTask(taskData);
+
+        // If this was from a capture, add its ID to the converted list
+        // This will filter it out from Quick Inbox display
+        if (captureId) {
+            setConvertedCaptureIds(prev => [...prev, captureId]);
+        }
+
+        // Clear the capture ID
+        setSelectedCaptureId(null);
+    };
 
     // Filter Logic
     const isVisible = (t) => {
@@ -140,10 +170,13 @@ export default function CoveyMatrix() {
                     {/* Quick Inbox */}
                     <div style={{ position: 'relative' }}>
                         <button
-                            className="btn btn-primary"
-                            onClick={() => setShowQuickInbox(!showQuickInbox)}
+                            className="btn btn-secondary"
+                            onClick={() => {
+                                containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                setTimeout(() => setShowQuickInbox(true), 250);
+                            }}
                             style={{
-                                padding: '0.6rem 1.25rem',
+                                padding: '0.6rem 1.25rem 0.6rem 1.25rem',
                                 fontSize: '0.95rem',
                                 boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
                                 border: '1px solid transparent',
@@ -159,13 +192,16 @@ export default function CoveyMatrix() {
                         >
                             <Zap size={20} color="#f59e0b" fill="#f59e0b" /> Quick Inbox
                         </button>
-                        {showQuickInbox && <QuickInboxModal onClose={() => setShowQuickInbox(false)} />}
+                        {showQuickInbox && <QuickInboxModal onClose={() => setShowQuickInbox(false)} onCaptureSelect={handleCaptureSelect} excludeIds={convertedCaptureIds} />}
                     </div>
 
                     {/* New Task */}
                     <button
                         className="btn btn-primary"
-                        onClick={() => setShowForm(true)}
+                        onClick={() => {
+                            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            setTimeout(() => setShowForm(true), 250);
+                        }}
                         style={{
                             padding: '0.6rem 1.25rem 0.6rem 1.25rem',
                             fontSize: '0.95rem',
@@ -203,7 +239,16 @@ export default function CoveyMatrix() {
             </div>
 
             {showForm && (
-                <TaskModal onClose={() => setShowForm(false)} onSave={addTask} contexts={contexts} />
+                <TaskModal
+                    onClose={() => {
+                        setShowForm(false);
+                        setPrefilledTitle(''); // Clear prefilled title
+                        setSelectedCaptureId(null); // Clear selected capture ID
+                    }}
+                    onSave={handleTaskSave}
+                    contexts={contexts}
+                    initialTitle={prefilledTitle}
+                />
             )}
 
             {selectedTask && (
@@ -323,11 +368,11 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
 }
 
 
-function TaskModal({ onClose, onSave, contexts }) {
-    const { visions = [], values = [], missions = [] } = useMission();
-    const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
+function TaskModal({ onClose, onSave, contexts, initialTitle = '' }) {
+    const { missions = [], getRootMissions, getSubMissions } = useMission();
+    const [showRoleSelector, setShowRoleSelector] = useState(false);
     const [form, setForm] = useState({
-        title: '',
+        title: initialTitle,
         urge: false,
         imp: false,
         dueDate: '',
@@ -335,12 +380,45 @@ function TaskModal({ onClose, onSave, contexts }) {
         missionId: ''
     });
 
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, []);
+
+    // Update title if initialTitle changes (e.g., from Quick Inbox)
+    useEffect(() => {
+        if (initialTitle) {
+            setForm(prev => ({ ...prev, title: initialTitle }));
+        }
+    }, [initialTitle]);
+
+    const [showContextSelector, setShowContextSelector] = useState(false);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!form.title) return;
-        onSave(form);
-        resetTranscript();
+        // Validate all required fields
+        if (!form.title || !form.missionId || !form.dueDate || !form.context) return;
+
+        // Explicitly set isInbox: false and isArchived: false to ensure task is visible
+        onSave({
+            ...form,
+            isInbox: false,
+            isArchived: false
+        });
         onClose();
+    };
+
+    // Check if form is valid (all required fields filled)
+    const isFormValid = Boolean(form.title && form.missionId && form.dueDate && form.context);
+
+    // Get selected role/submission text for display
+    const getSelectedRoleText = () => {
+        if (!form.missionId) return "No specific Link";
+        const selected = missions.find(m => m.id === form.missionId);
+        return selected ? selected.text : "Unknown Role";
     };
 
     return (
@@ -348,7 +426,31 @@ function TaskModal({ onClose, onSave, contexts }) {
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
         }}>
-            <div className="glass-panel" style={{ width: '450px', padding: '2rem', borderRadius: 'var(--radius-lg)', background: '#1e293b' }}>
+            <style>
+                {`
+                    @keyframes slideUpFade {
+                        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+                        to { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    input[type="date"]::-webkit-calendar-picker-indicator {
+                        transform: scale(1.2);
+                        cursor: pointer;
+                    }
+                `}
+            </style>
+            <div className="glass-panel" style={{
+                width: '450px',
+                padding: '2rem',
+                borderRadius: 'var(--radius-lg)',
+                background: '#1e293b',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                position: 'relative',
+                overflow: 'visible'
+            }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                     <h3>Add New Task</h3>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
@@ -357,91 +459,124 @@ function TaskModal({ onClose, onSave, contexts }) {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Task Title</label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                autoFocus
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    paddingRight: '2.5rem',
-                                    borderRadius: 'var(--radius-md)',
-                                    border: `1px solid ${isListening ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)'}`,
-                                    background: 'rgba(0,0,0,0.2)',
-                                    color: 'white',
-                                    transition: 'all 0.2s'
-                                }}
-                                value={isListening ? transcript : form.title}
-                                onChange={e => setForm({ ...form, title: e.target.value })}
-                                placeholder={isListening ? "Listening..." : "What needs to be done?"}
-                            />
-                            <button
-                                type="button"
-                                onClick={isListening ? stopListening : startListening}
-                                style={{
-                                    position: 'absolute',
-                                    right: '0.5rem',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: isListening ? 'var(--color-danger)' : 'var(--color-text-muted)',
-                                    cursor: 'pointer'
-                                }}
-                                title="Voice Input"
-                            >
-                                <Mic size={18} className={isListening ? 'pulse' : ''} />
-                            </button>
-                        </div>
-                        {useEffect(() => {
-                            if (transcript && isListening) {
-                                setForm(prev => ({ ...prev, title: transcript }));
-                            }
-                        }, [transcript, isListening])}
+                        <input
+                            ref={inputRef}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'rgba(0,0,0,0.2)',
+                                color: 'white'
+                            }}
+                            value={form.title}
+                            onChange={e => setForm({ ...form, title: e.target.value })}
+                            placeholder="What needs to be done?"
+                        />
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <label style={{ flex: 1, padding: '1rem', border: `1px solid ${form.urge ? 'var(--color-danger)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'center', background: form.urge ? 'rgba(239, 68, 68, 0.1)' : 'transparent', transition: 'all 0.2s' }}>
+                        <label style={{ flex: 1, padding: '0.6rem', border: `1px solid ${form.urge ? 'var(--color-danger)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'center', background: form.urge ? 'rgba(239, 68, 68, 0.1)' : 'transparent', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <input type="checkbox" checked={form.urge} onChange={e => setForm({ ...form, urge: e.target.checked })} style={{ display: 'none' }} />
-                            Urgent ⚡
+                            Urgent <Flame size={16} fill={form.urge ? "currentColor" : "none"} />
                         </label>
-                        <label style={{ flex: 1, padding: '1rem', border: `1px solid ${form.imp ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'center', background: form.imp ? 'rgba(99, 102, 241, 0.1)' : 'transparent', transition: 'all 0.2s' }}>
+                        <label style={{ flex: 1, padding: '0.6rem', border: `1px solid ${form.imp ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'center', background: form.imp ? 'rgba(99, 102, 241, 0.1)' : 'transparent', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <input type="checkbox" checked={form.imp} onChange={e => setForm({ ...form, imp: e.target.checked })} style={{ display: 'none' }} />
-                            Important ⭐
+                            Important <Star size={16} fill={form.imp ? "currentColor" : "none"} />
                         </label>
                     </div>
 
-                    {/* Linking Section */}
+                    {/* Submission Selector Button */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Link to Mission</label>
-                        <select
-                            style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-                            value={form.missionId}
-                            onChange={e => setForm({ ...form, missionId: e.target.value })}
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Link to Submission</label>
+                        <button
+                            type="button"
+                            onClick={() => setShowRoleSelector(true)}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'rgba(0,0,0,0.2)',
+                                color: 'white',
+                                textAlign: 'left',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer'
+                            }}
                         >
-                            <option value="">-- No specific Link --</option>
-                            {(visions.length > 0 || values.length > 0 || missions.length > 0) ? (
-                                <>
-                                    <optgroup label="Roles & Key Areas">
-                                        {missions.map(m => (
-                                            <React.Fragment key={m.id}>
-                                                <option value={m.id}>🎯 {m.text}</option>
-                                            </React.Fragment>
-                                        ))}
-                                    </optgroup>
-                                    <optgroup label="Long-Term Vision">
-                                        {visions.map(v => <option key={v.id} value={v.id}>👁 {v.text}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Core Values">
-                                        {values.map(v => <option key={v.id} value={v.id}>❤️ {v.text}</option>)}
-                                    </optgroup>
-                                </>
-                            ) : <option disabled>No Compass defined yet</option>}
-                        </select>
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {getSelectedRoleText()}
+                            </span>
+                            <Link2 size={16} style={{ flexShrink: 0, marginLeft: '0.5rem' }} />
+                        </button>
                     </div>
+
+                    {/* Submission Selector Overlay */}
+                    {showRoleSelector && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: '#1e293b',
+                            zIndex: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            borderRadius: 'var(--radius-lg)',
+                            padding: '1.5rem',
+                            animation: 'fadeIn 0.2s ease-out'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <button onClick={() => setShowRoleSelector(false)} className="btn btn-ghost" style={{ padding: '0.5rem' }}><X size={20} /></button>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Select a Submission</h3>
+                            </div>
+
+                            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingRight: '0.5rem' }}>
+                                <button
+                                    onClick={() => { setForm({ ...form, missionId: '' }); setShowRoleSelector(false); }}
+                                    className="btn btn-ghost"
+                                    style={{ justifyContent: 'flex-start', padding: '0.75rem', border: '1px dashed rgba(255,255,255,0.1)' }}
+                                >
+                                    No Specific Submission
+                                </button>
+
+                                {getRootMissions && getRootMissions().map(root => {
+                                    const subs = getSubMissions ? getSubMissions(root.id) : [];
+                                    return (
+                                        <div key={root.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '1rem' }}>
+                                            <div style={{ padding: '0.5rem', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                {root.text}
+                                            </div>
+                                            {subs.length > 0 ? subs.map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => { setForm({ ...form, missionId: sub.id }); setShowRoleSelector(false); }}
+                                                    className="btn btn-ghost"
+                                                    style={{
+                                                        justifyContent: 'flex-start',
+                                                        padding: '0.6rem 0.6rem 0.6rem 1.5rem',
+                                                        fontSize: '0.9rem',
+                                                        background: form.missionId === sub.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                        borderLeft: form.missionId === sub.id ? '2px solid var(--color-primary)' : '2px solid transparent'
+                                                    }}
+                                                >
+                                                    🎯 {sub.text}
+                                                </button>
+                                            )) : (
+                                                <div style={{ padding: '0.5rem 1.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                                    No submissions defined yet
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Due Date</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Due Date</label>
                             <input
                                 type="date"
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
@@ -449,23 +584,102 @@ function TaskModal({ onClose, onSave, contexts }) {
                                 onChange={e => setForm({ ...form, dueDate: e.target.value })}
                             />
                         </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Context</label>
-                            <select
-                                style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-                                value={form.context}
-                                onChange={e => setForm({ ...form, context: e.target.value })}
+                        <div style={{ position: 'relative' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Context</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowContextSelector(!showContextSelector)}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.6rem 2rem 0.6rem 0.6rem',
+                                    borderRadius: 'var(--radius-sm)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(0,0,0,0.2)',
+                                    color: 'white',
+                                    textAlign: 'left',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    minHeight: '42px'
+                                }}
                             >
-                                {contexts.map(c => (
-                                    <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
-                                ))}
-                            </select>
+                                {contexts.find(c => c.name === form.context) ? (
+                                    <>
+                                        <span style={{ marginRight: '0.5rem' }}>{contexts.find(c => c.name === form.context).icon}</span>
+                                        {form.context}
+                                    </>
+                                ) : (
+                                    form.context
+                                )}
+                                <ChevronDown size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', transform: showContextSelector ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)', transition: 'transform 0.2s' }} />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showContextSelector && (
+                                <>
+                                    {/* Invisible backdrop to close on click outside */}
+                                    <div
+                                        style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                                        onClick={() => setShowContextSelector(false)}
+                                    />
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        width: '100%',
+                                        marginTop: '0.5rem',
+                                        background: '#1e293b',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: 'var(--radius-md)',
+                                        zIndex: 50,
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                                        maxHeight: '160px',
+                                        overflowY: 'auto',
+                                        animation: 'fadeIn 0.1s ease-out'
+                                    }}>
+                                        {contexts.map(c => (
+                                            <button
+                                                key={c.id}
+                                                type="button"
+                                                onClick={() => { setForm({ ...form, context: c.name }); setShowContextSelector(false); }}
+                                                className="btn btn-ghost"
+                                                style={{
+                                                    width: '100%',
+                                                    justifyContent: 'flex-start',
+                                                    padding: '0.4rem 0.6rem',
+                                                    fontSize: '0.9rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.6rem',
+                                                    background: form.context === c.name ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                    color: form.context === c.name ? 'white' : 'var(--color-text-muted)',
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '1rem' }}>{c.icon}</span>
+                                                {c.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>Create Task</button>
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={!isFormValid}
+                        style={{
+                            marginTop: '1rem',
+                            opacity: isFormValid ? 1 : 0.5,
+                            cursor: isFormValid ? 'pointer' : 'not-allowed'
+                        }}
+                    >
+                        Create Task
+                    </button>
                 </form>
             </div>
         </div>
-    )
+    );
 }

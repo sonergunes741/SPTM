@@ -18,20 +18,33 @@ export function TaskProvider({ children }) {
     const [contexts, setContexts] = useLocalStorage('sptm_contexts_v1', DEFAULT_CONTEXTS);
 
     const addTask = (taskData) => {
+        // Spread taskData first, then override with system fields to prevent ID conflicts
         const newTask = {
-            id: crypto.randomUUID(),
+            ...taskData,
+            id: crypto.randomUUID(), // This MUST come after spread to prevent override
             status: 'todo',
             createdAt: new Date().toISOString(),
             timeSpent: 0,
-            timerStartedAt: null,
-            ...taskData
+            timerStartedAt: null
         };
         setTasks(prev => [...prev, newTask]);
         return newTask;
     };
 
     const updateTask = (id, updates) => {
-        setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+        console.log('=== UPDATE TASK ===');
+        console.log('Updating task with ID:', id);
+        console.log('Updates to apply:', updates);
+
+        setTasks(prev => {
+            console.log('Current tasks count:', prev.length);
+            const taskToUpdate = prev.find(t => t.id === id);
+            console.log('Found task to update:', taskToUpdate);
+
+            const updated = prev.map(t => t.id === id ? { ...t, ...updates } : t);
+            console.log('Tasks after update:', updated.length);
+            return updated;
+        });
     };
 
     const deleteTask = (id) => {
