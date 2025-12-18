@@ -114,9 +114,7 @@ function AppContent() {
                         ? "Insights"
                         : activeTab}
               </h2>
-              <p style={{ color: "var(--color-text-muted)" }}>
-                Manage your day with purpose.
-              </p>
+
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <div style={{ position: "relative" }}>
@@ -156,19 +154,12 @@ function AppContent() {
                 </div>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "320px 1fr",
-                    gap: "1.5rem",
                     flex: 1,
-                    minHeight: 0
+                    minHeight: 0,
+                    overflow: "hidden"
                   }}
                 >
-                  <div style={{ height: "100%", overflow: "hidden" }}>
-                    <InboxWidget />
-                  </div>
-                  <div style={{ height: "100%", overflow: "hidden" }}>
-                    <CoveyMatrix />
-                  </div>
+                  <CoveyMatrix />
                 </div>
               </div>
               <DragOverlay dropAnimation={null}>

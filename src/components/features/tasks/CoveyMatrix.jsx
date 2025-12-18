@@ -1,28 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 import TaskCard from './TaskCard';
 import TaskDetailModal from './TaskDetailModal';
-import { Plus, X, LayoutGrid, List, Mic } from 'lucide-react';
+import QuickInboxModal from '../inbox/QuickInboxModal';
+import ContextManagerModal from './ContextManagerModal'; // New Import
+import { Plus, X, LayoutGrid, List, Zap, Filter, Mic, Settings } from 'lucide-react'; // Added Settings
 import useVoiceInput from '../../../hooks/useVoiceInput';
-import { useEffect } from 'react';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 export default function CoveyMatrix() {
-    const { tasks, addTask } = useTasks();
+    const { tasks, addTask, contexts } = useTasks();
     const [showForm, setShowForm] = useState(false);
-    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+    const [viewMode, setViewMode] = useState('grid');
     const [selectedTask, setSelectedTask] = useState(null);
+    const [activeContextId, setActiveContextId] = useState('all');
+    const [showQuickInbox, setShowQuickInbox] = useState(false);
+    const [showContextManager, setShowContextManager] = useState(false); // New State
 
-    // Filtering Logic
-    // Show tasks if:
-    // 1. Not archived
-    // 2. AND (Status is 'todo' OR (Status is 'done' AND completed less than 24h ago))
-
+    // Filter Logic
     const isVisible = (t) => {
         if (t.isArchived) return false;
-        if (t.isInbox) return false; // Don't show inbox items in matrix
+        if (t.isInbox) return false;
+
+        // Context Filter
+        if (activeContextId !== 'all') {
+            const ctx = contexts.find(c => c.id === activeContextId);
+            if (ctx && t.context !== ctx.name) return false;
+        }
+
         if (t.status !== 'done') return true;
-        // If done, check if within 24h
         const ONE_DAY = 24 * 60 * 60 * 1000;
         const completeTime = new Date(t.completedAt).getTime();
         return (Date.now() - completeTime) < ONE_DAY;
@@ -41,80 +49,101 @@ export default function CoveyMatrix() {
             flexDirection: 'column',
             height: '100%',
             padding: '1.5rem',
-            borderRadius: 'var(--radius-lg)'
+            borderRadius: 'var(--radius-lg)',
+            overflow: 'visible'
         }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: 'var(--radius-lg)',
-                        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.1))',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1px solid rgba(99, 102, 241, 0.2)',
-                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.1)'
-                    }}>
-                        <LayoutGrid size={24} style={{ color: '#c4b5fd' }} />
-                    </div>
+                {/* Left: Title & Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                     <div>
                         <h3 className="text-gradient-primary" style={{ fontSize: '1.5rem', margin: 0, lineHeight: 1 }}>Priorities Matrix</h3>
-                         <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0 0' }}>
-                            Eisenhower Method
-                        </p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0 0' }}>Eisenhower Method</p>
+                    </div>
+
+                    {/* Context Filter & Manager */}
+                    <div style={{ position: 'relative' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(255,255,255,0.03)',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            padding: '0.4rem 0.75rem',
+                            gap: '0.5rem',
+                            minWidth: '200px'
+                        }}>
+                            <Filter size={14} className="text-muted" />
+                            <select
+                                value={activeContextId}
+                                onChange={(e) => setActiveContextId(e.target.value)}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white',
+                                    fontSize: '0.9rem',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    flex: 1,
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="all" style={{ background: '#1e293b' }}>All Contexts</option>
+                                <optgroup label="My Contexts" style={{ background: '#1e293b' }}>
+                                    {contexts.map(c => (
+                                        <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{c.icon} {c.name}</option>
+                                    ))}
+                                </optgroup>
+                            </select>
+
+                            {/* Manage Button */}
+                            <button
+                                onClick={() => setShowContextManager(true)}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '0.25rem' }}
+                                title="Manage Contexts"
+                            >
+                                <Settings size={14} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                     <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            style={{ 
-                                background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                                border: 'none', 
-                                color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', 
-                                padding: '0.4rem', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer', 
-                                display: 'flex',
-                                transition: 'all 0.2s'
-                            }}
-                            title="List View"
-                        >
-                            <List size={18} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            style={{ 
-                                background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                                border: 'none', 
-                                color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', 
-                                padding: '0.4rem', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer', 
-                                display: 'flex',
-                                transition: 'all 0.2s'
-                            }}
-                            title="Grid View"
-                        >
-                            <LayoutGrid size={18} />
-                        </button>
+                {/* Right: Actions */}
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', position: 'relative' }}>
+                    {/* View Toggle */}
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button onClick={() => setViewMode('list')} style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="List View"><List size={18} /></button>
+                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Grid View"><LayoutGrid size={18} /></button>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setShowForm(true)} style={{ padding: '0.75rem 1.25rem', fontSize: '0.95rem', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)' }}>
+
+                    {/* Quick Inbox */}
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className={`btn ${showQuickInbox ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => setShowQuickInbox(!showQuickInbox)}
+                            style={{ padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: showQuickInbox ? 'none' : '1px solid rgba(255,255,255,0.1)' }}
+                        >
+                            <Zap size={18} fill={showQuickInbox ? 'currentColor' : 'none'} />
+                            <span style={{ fontSize: '0.9rem' }}>Quick Inbox</span>
+                        </button>
+                        {showQuickInbox && <QuickInboxModal onClose={() => setShowQuickInbox(false)} />}
+                    </div>
+
+                    {/* New Task */}
+                    <button className="btn btn-primary" onClick={() => setShowForm(true)} style={{ padding: '0.6rem 1.25rem', fontSize: '0.95rem', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)' }}>
                         <Plus size={20} /> New Task
                     </button>
                 </div>
             </div>
 
+            {/* Matrix Grid */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: viewMode === 'grid' ? '1fr 1fr' : '1fr',
                 gap: '1rem',
-                flex: 1, // Take remaining space
-                minHeight: 0, // Allow nested scroll
-                overflow: 'hidden' // Contain children
+                flex: 1,
+                minHeight: 0,
+                overflow: 'hidden'
             }}>
                 <Quadrant id="q1" title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
                 <Quadrant id="q2" title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={setSelectedTask} />
@@ -123,7 +152,7 @@ export default function CoveyMatrix() {
             </div>
 
             {showForm && (
-                <TaskModal onClose={() => setShowForm(false)} onSave={addTask} />
+                <TaskModal onClose={() => setShowForm(false)} onSave={addTask} contexts={contexts} />
             )}
 
             {selectedTask && (
@@ -132,18 +161,14 @@ export default function CoveyMatrix() {
                     onClose={() => setSelectedTask(null)}
                 />
             )}
+
+            {showContextManager && (
+                <ContextManagerModal onClose={() => setShowContextManager(false)} />
+            )}
         </div>
     );
 }
 
-// Import useDroppable
-import { useDroppable } from '@dnd-kit/core';
-
-// Import CSS for Draggable
-import { CSS } from '@dnd-kit/utilities';
-import { useDraggable } from '@dnd-kit/core';
-
-// Draggable Wrapper for Matrix Items
 function DraggableMatrixItem({ task, viewMode, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
@@ -151,11 +176,11 @@ function DraggableMatrixItem({ task, viewMode, onClick }) {
 
     const style = {
         transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0 : 1, // Completely hide original
+        opacity: isDragging ? 0 : 1,
         touchAction: 'none',
         cursor: isDragging ? 'grabbing' : 'grab',
-        zIndex: isDragging ? 999 : 'auto', // Ensure it floats above
-        height: viewMode === 'list' ? 'auto' : '100%' // Maintain height in grid
+        zIndex: isDragging ? 999 : 'auto',
+        height: viewMode === 'list' ? 'auto' : '100%'
     };
 
     return (
@@ -171,7 +196,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
     });
 
     return (
-        <div 
+        <div
             ref={setNodeRef}
             style={{
                 borderRadius: 'var(--radius-lg)',
@@ -180,9 +205,9 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 flexDirection: 'column',
                 borderTop: `4px solid ${color}`,
                 transition: 'all 0.3s ease',
-                background: isOver 
-                    ? `rgba(255, 255, 255, 0.1)` 
-                    : 'rgba(30, 41, 59, 0.4)', // Highlight on hover
+                background: isOver
+                    ? `rgba(255, 255, 255, 0.1)`
+                    : 'rgba(30, 41, 59, 0.4)',
                 border: isOver ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.05)',
                 height: '100%',
                 overflow: 'hidden'
@@ -202,33 +227,20 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 alignContent: 'start'
             }}>
                 {tasks.map(t => (
-                    <DraggableMatrixItem 
-                        key={t.id} 
-                        task={t} 
-                        viewMode={viewMode} 
-                        onClick={() => onTaskClick(t)} 
+                    <DraggableMatrixItem
+                        key={t.id}
+                        task={t}
+                        viewMode={viewMode}
+                        onClick={() => onTaskClick(t)}
                     />
                 ))}
-                {tasks.length === 0 && (
-                    <div style={{ 
-                        height: '100%', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        color: 'rgba(255,255,255,0.1)', 
-                        fontSize: '0.85rem', 
-                        fontStyle: 'italic'
-                    }}>
-                        {isOver ? "Drop here!" : "Empty"}
-                    </div>
-                )}
             </div>
         </div>
     );
 }
 
-function TaskModal({ onClose, onSave }) {
-    const { visions = [], values = [], missions = [] } = useMission(); // Get Compass items
+function TaskModal({ onClose, onSave, contexts }) {
+    const { visions = [], values = [], missions = [] } = useMission();
     const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
     const [form, setForm] = useState({
         title: '',
@@ -236,7 +248,7 @@ function TaskModal({ onClose, onSave }) {
         imp: false,
         dueDate: '',
         context: '@home',
-        missionId: '' // New Linking Field
+        missionId: ''
     });
 
     const handleSubmit = (e) => {
@@ -264,13 +276,13 @@ function TaskModal({ onClose, onSave }) {
                         <div style={{ position: 'relative' }}>
                             <input
                                 autoFocus
-                                style={{ 
-                                    width: '100%', 
-                                    padding: '0.75rem', 
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
                                     paddingRight: '2.5rem',
-                                    borderRadius: 'var(--radius-md)', 
-                                    border: `1px solid ${isListening ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)'}`, 
-                                    background: 'rgba(0,0,0,0.2)', 
+                                    borderRadius: 'var(--radius-md)',
+                                    border: `1px solid ${isListening ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)'}`,
+                                    background: 'rgba(0,0,0,0.2)',
                                     color: 'white',
                                     transition: 'all 0.2s'
                                 }}
@@ -278,7 +290,7 @@ function TaskModal({ onClose, onSave }) {
                                 onChange={e => setForm({ ...form, title: e.target.value })}
                                 placeholder={isListening ? "Listening..." : "What needs to be done?"}
                             />
-                             <button
+                            <button
                                 type="button"
                                 onClick={isListening ? stopListening : startListening}
                                 style={{
@@ -289,10 +301,7 @@ function TaskModal({ onClose, onSave }) {
                                     background: 'none',
                                     border: 'none',
                                     color: isListening ? 'var(--color-danger)' : 'var(--color-text-muted)',
-                                    cursor: 'pointer',
-                                    padding: '0.25rem',
-                                    display: 'flex',
-                                    alignItems: 'center'
+                                    cursor: 'pointer'
                                 }}
                                 title="Voice Input"
                             >
@@ -319,7 +328,7 @@ function TaskModal({ onClose, onSave }) {
 
                     {/* Linking Section */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Link to Mission (Why?)</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Link to Mission</label>
                         <select
                             style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                             value={form.missionId}
@@ -329,16 +338,9 @@ function TaskModal({ onClose, onSave }) {
                             {(visions.length > 0 || values.length > 0 || missions.length > 0) ? (
                                 <>
                                     <optgroup label="Roles & Key Areas">
-                                        {/* Flatten missions for dropdown - focusing on leaf nodes (Roles) mainly, but let's show all for flexibility */}
                                         {missions.map(m => (
                                             <React.Fragment key={m.id}>
                                                 <option value={m.id}>🎯 {m.text}</option>
-                                                {/* If we had a flat list of sub-missions we could map them here, but getSubMissions is a function. 
-                                                    Ideally we'd flatten this outside render or use a helper. 
-                                                    For now, let's just stick to top-level missions + one level deep if needed, 
-                                                    but getRootMissions vs missions... 'missions' contains ALL missions (root + subs) in the context?
-                                                    Check MissionContext. missions is the state array containing ALL items.
-                                                */}
                                             </React.Fragment>
                                         ))}
                                     </optgroup>
@@ -364,19 +366,15 @@ function TaskModal({ onClose, onSave }) {
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Context (GTD)</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Context</label>
                             <select
                                 style={{ width: '100%', padding: '0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                                 value={form.context}
                                 onChange={e => setForm({ ...form, context: e.target.value })}
                             >
-                                <option value="@home">🏠 @home</option>
-                                <option value="@work">💼 @work</option>
-                                <option value="@computer">💻 @computer</option>
-                                <option value="@phone">📱 @phone</option>
-                                <option value="@errands">🚗 @errands</option>
-                                <option value="@waiting">⏳ @waiting</option>
-                                <option value="@anywhere">🌍 @anywhere</option>
+                                {contexts.map(c => (
+                                    <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
