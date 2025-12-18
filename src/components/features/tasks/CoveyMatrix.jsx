@@ -13,7 +13,7 @@ import { CSS } from '@dnd-kit/utilities';
 export default function CoveyMatrix() {
     const { tasks, addTask, contexts } = useTasks();
     const [showForm, setShowForm] = useState(false);
-    const [viewMode, setViewMode] = useState('grid');
+    const [viewMode, setViewMode] = useState('list'); // Default to list view inside quadrants
     const [selectedTask, setSelectedTask] = useState(null);
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
@@ -110,10 +110,10 @@ export default function CoveyMatrix() {
 
                 {/* Right: Actions */}
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', position: 'relative' }}>
-                    {/* View Toggle */}
+                    {/* View Toggle - Controls Tasks View inside Quadrants */}
                     <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <button onClick={() => setViewMode('list')} style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="List View"><List size={18} /></button>
-                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Grid View"><LayoutGrid size={18} /></button>
+                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Card View"><LayoutGrid size={18} /></button>
                     </div>
 
                     {/* Quick Inbox */}
@@ -136,10 +136,10 @@ export default function CoveyMatrix() {
                 </div>
             </div>
 
-            {/* Matrix Grid - Content */}
+            {/* Matrix Grid - Always 2x2 for Matrix Layout */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: viewMode === 'grid' ? '1fr 1fr' : '1fr',
+                gridTemplateColumns: '1fr 1fr', // FIXED: 2x2 Layout
                 gap: '1.5rem',
                 flex: 1,
                 minHeight: 0,
@@ -181,7 +181,7 @@ function DraggableMatrixItem({ task, viewMode, onClick }) {
         touchAction: 'none',
         cursor: isDragging ? 'grabbing' : 'grab',
         zIndex: isDragging ? 999 : 'auto',
-        height: 'auto' // FIX: Always auto to prevent stretching
+        height: 'auto'
     };
 
     return (
@@ -206,7 +206,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 background: isOver ? `rgba(255, 255, 255, 0.08)` : 'rgba(30, 41, 59, 0.4)',
                 border: '1px solid rgba(255,255,255,0.05)',
                 boxShadow: isOver ? `0 0 20px ${color}20` : 'none',
-                height: '280px', // FIX: Reduced slightly for perfectly visible 3.5 items
+                height: '280px', // Fixed height for 3.5 items
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden'
@@ -231,15 +231,18 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 </span>
             </div>
 
-            {/* Task Area */}
+            {/* Task Area - Dynamic Grid/List Layout */}
             <div style={{
                 flex: 1,
                 overflowY: 'auto',
                 padding: '1rem',
-                display: 'flex',
-                flexDirection: 'column',
+                // DYNAMIC LAYOUT HERE
+                display: viewMode === 'grid' ? 'grid' : 'flex',
+                flexDirection: viewMode === 'list' ? 'column' : undefined,
+                gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(130px, 1fr))' : undefined,
                 gap: '0.75rem',
-                alignItems: 'stretch' // Ensure items stretch horizontally
+                alignItems: viewMode === 'list' ? 'stretch' : 'start',
+                alignContent: 'start' // For grid view start alignment
             }}>
                 {tasks.map(t => (
                     <DraggableMatrixItem
@@ -251,7 +254,16 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 ))}
 
                 {tasks.length === 0 && (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.1, fontStyle: 'italic' }}>
+                    <div style={{
+                        gridColumn: viewMode === 'grid' ? '1 / -1' : undefined,
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.1,
+                        fontStyle: 'italic',
+                        minHeight: '100px'
+                    }}>
                         Empty
                     </div>
                 )}
