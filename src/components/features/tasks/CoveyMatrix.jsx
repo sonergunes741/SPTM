@@ -18,6 +18,7 @@ export default function CoveyMatrix() {
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
     const [showContextManager, setShowContextManager] = useState(false);
+    const [showContextDropdown, setShowContextDropdown] = useState(false);
     const [prefilledTitle, setPrefilledTitle] = useState(''); // For Quick Inbox capture selection
     const [selectedCaptureId, setSelectedCaptureId] = useState(null); // To track which capture is being converted
     const containerRef = useRef(null);
@@ -99,64 +100,191 @@ export default function CoveyMatrix() {
                     </div>
 
 
-                    {/* View Toggle - Controls Tasks View inside Quadrants */}
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button onClick={() => setViewMode('list')} style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="List View"><List size={18} /></button>
-                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Card View"><LayoutGrid size={18} /></button>
-                    </div>
+                    {/* View Toggle & Context Filter Group */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
 
-                    {/* Context Filter & Manager */}
-                    <div style={{ position: 'relative' }}>
+                        {/* View Toggle - Pill Style */}
                         <div style={{
+                            background: '#0f172a',
+                            padding: '0.2rem',
+                            borderRadius: '10px',
                             display: 'flex',
-                            alignItems: 'center',
-                            background: 'rgba(255,255,255,0.03)',
-                            borderRadius: '8px',
                             border: '1px solid rgba(255,255,255,0.08)',
-                            padding: '0.4rem 0.75rem',
-                            gap: '0.5rem',
-                            minWidth: '200px'
+                            gap: '2px'
                         }}>
-                            <Filter size={14} className="text-muted" />
-                            <select
-                                value={activeContextId}
-                                onChange={(e) => setActiveContextId(e.target.value)}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white',
-                                    fontSize: '0.9rem',
-                                    outline: 'none',
-                                    cursor: 'pointer',
-                                    flex: 1,
-                                    width: '100%'
-                                }}
-                            >
-                                <option value="all" style={{ background: '#1e293b' }}>Context</option>
-                                {contexts.map(c => (
-                                    <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{c.icon} {c.name}</option>
-                                ))}
-                            </select>
-
-                            {/* Manage Button */}
                             <button
-                                onClick={() => setShowContextManager(true)}
+                                onClick={() => setViewMode('list')}
                                 style={{
-                                    background: 'none',
+                                    background: viewMode === 'list' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                                    color: 'white',
+                                    opacity: viewMode === 'list' ? 1 : 0.5,
                                     border: 'none',
-                                    color: 'var(--color-text-muted)',
+                                    padding: '0.4rem 0.6rem',
+                                    borderRadius: '8px',
                                     cursor: 'pointer',
-                                    padding: '0 0 0 0.5rem',
-                                    borderLeft: '1px solid rgba(255,255,255,0.1)',
-                                    marginLeft: '0.5rem',
+                                    transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    height: '100%'
+                                    justifyContent: 'center'
                                 }}
-                                title="Manage Contexts"
+                                title="List View"
                             >
-                                <Settings size={14} />
+                                <List size={16} strokeWidth={viewMode === 'list' ? 2.5 : 2} />
                             </button>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                style={{
+                                    background: viewMode === 'grid' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                                    color: 'white',
+                                    opacity: viewMode === 'grid' ? 1 : 0.5,
+                                    border: 'none',
+                                    padding: '0.4rem 0.6rem',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                title="Card View"
+                            >
+                                <LayoutGrid size={16} strokeWidth={viewMode === 'grid' ? 2.5 : 2} />
+                            </button>
+                        </div>
+
+                        {/* Divider */}
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
+
+                        {/* Context Filter - Custom Dropdown */}
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setShowContextDropdown(!showContextDropdown)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.6rem',
+                                    background: '#0f172a',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '10px',
+                                    padding: '0.5rem 0.8rem',
+                                    color: 'white',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    minWidth: '160px',
+                                    justifyContent: 'space-between'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span><Filter size={14} /></span>
+                                    <span style={{ whiteSpace: 'nowrap' }}>
+                                        {activeContextId === 'all' ? 'All Contexts' : (() => {
+                                            const ctx = contexts.find(c => c.id === activeContextId);
+                                            return ctx ? <><span style={{ marginRight: '6px' }}>{ctx.icon}</span>{ctx.name}</> : 'Unknown';
+                                        })()}
+                                    </span>
+                                </div>
+                                <ChevronDown size={14} style={{ transform: showContextDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showContextDropdown && (
+                                <>
+                                    <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setShowContextDropdown(false)} />
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 'calc(100% + 6px)',
+                                        left: 0,
+                                        width: '240px',
+                                        background: '#1e293b',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                                        zIndex: 50,
+                                        padding: '0.5rem',
+                                        animation: 'fadeIn 0.1s ease-out'
+                                    }}>
+                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                            <button
+                                                onClick={() => { setActiveContextId('all'); setShowContextDropdown(false); }}
+                                                style={{
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                    padding: '0.5rem 0.75rem',
+                                                    borderRadius: '6px',
+                                                    background: activeContextId === 'all' ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                    color: activeContextId === 'all' ? '#818cf8' : 'white',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.75rem',
+                                                    fontSize: '0.9rem',
+                                                    marginBottom: '2px',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                            >
+                                                <span>🌍</span> All Contexts
+                                            </button>
+                                            {contexts.map(c => (
+                                                <button
+                                                    key={c.id}
+                                                    onClick={() => { setActiveContextId(c.id); setShowContextDropdown(false); }}
+                                                    style={{
+                                                        width: '100%',
+                                                        textAlign: 'left',
+                                                        padding: '0.5rem 0.75rem',
+                                                        borderRadius: '6px',
+                                                        background: activeContextId === c.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                        color: activeContextId === c.id ? '#818cf8' : 'white',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.75rem',
+                                                        fontSize: '0.9rem',
+                                                        marginBottom: '2px',
+                                                        transition: 'background 0.2s'
+                                                    }}
+                                                >
+                                                    <span>{c.icon}</span> {c.name}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.5rem 0' }}></div>
+
+                                        <button
+                                            onClick={() => {
+                                                containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                // Close dropdown immediately, but maybe delay the modal slightly if desired,
+                                                // though usually for modals immediate is fine. matching user request "sanki... tıklamışız gibi"
+                                                setShowContextDropdown(false);
+                                                setTimeout(() => setShowContextManager(true), 250);
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                textAlign: 'left',
+                                                padding: '0.5rem 0.75rem',
+                                                borderRadius: '6px',
+                                                background: 'transparent',
+                                                color: '#94a3b8',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                fontSize: '0.85rem',
+                                                transition: 'color 0.2s'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                                            onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                                        >
+                                            <Settings size={14} /> Manage Contexts
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

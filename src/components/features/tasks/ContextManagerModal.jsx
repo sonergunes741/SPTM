@@ -126,15 +126,18 @@ export default function ContextManagerModal({ onClose }) {
                             onClick={() => setShowIconPicker(!showIconPicker)}
                             style={{
                                 width: '100%',
-                                padding: '0.5rem',
-                                textAlign: 'center',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                                 borderRadius: '6px',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 background: 'rgba(0,0,0,0.2)',
                                 color: 'white',
                                 cursor: 'pointer',
                                 fontSize: '1.2rem',
-                                lineHeight: 1
+                                lineHeight: 1,
+                                padding: 0
                             }}
                         >
                             {newContextIcon}
@@ -183,14 +186,14 @@ export default function ContextManagerModal({ onClose }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
                         <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Name</span>
                         <input
-                            style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                            style={{ width: '100%', height: '40px', padding: '0 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                             value={newContextName}
                             onChange={e => setNewContextName(e.target.value)}
                             placeholder="@newcontext"
                         />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                        <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 0.75rem', height: '36px' }} disabled={!newContextName.trim()}><Plus size={18} /></button>
+                        <button type="submit" className="btn btn-primary" style={{ padding: '0 0.75rem', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} disabled={!newContextName.trim()}><Plus size={18} /></button>
                     </div>
                 </form>
 
