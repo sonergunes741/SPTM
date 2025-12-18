@@ -51,6 +51,12 @@ export default function CoveyMatrix() {
         setSelectedCaptureId(null);
     };
 
+    // Handle task selection with scroll focus
+    const handleTaskSelection = (task) => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => setSelectedTask(task), 250);
+    };
+
     // Filter Logic
     const isVisible = (t) => {
         if (t.isArchived) return false;
@@ -68,7 +74,11 @@ export default function CoveyMatrix() {
         return (Date.now() - completeTime) < ONE_DAY;
     };
 
-    const visibleTasks = tasks.filter(isVisible);
+    const visibleTasks = tasks.filter(isVisible).sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+    });
 
     const q1 = visibleTasks.filter(t => t.urge && t.imp);
     const q2 = visibleTasks.filter(t => !t.urge && t.imp);
@@ -360,10 +370,10 @@ export default function CoveyMatrix() {
                 overflowY: 'auto',
                 paddingRight: '0.5rem'
             }}>
-                <Quadrant id="q1" title="Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q2" title="Important & Not Urgent" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q3" title="Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q4" title="Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant id="q1" title="Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={handleTaskSelection} />
+                <Quadrant id="q2" title="Important & Not Urgent" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={handleTaskSelection} />
+                <Quadrant id="q3" title="Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} onTaskClick={handleTaskSelection} />
+                <Quadrant id="q4" title="Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} onTaskClick={handleTaskSelection} />
             </div>
 
             {showForm && (
@@ -508,7 +518,10 @@ function TaskModal({ onClose, onSave, contexts, initialTitle = '' }) {
         missionId: ''
     });
 
+
     const inputRef = useRef(null);
+    const dateRef = useRef(null);
+
 
     useEffect(() => {
         if (inputRef.current) {
@@ -706,10 +719,12 @@ function TaskModal({ onClose, onSave, contexts, initialTitle = '' }) {
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Due Date</label>
                             <input
+                                ref={dateRef}
                                 type="date"
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', cursor: 'pointer' }}
                                 value={form.dueDate}
                                 onChange={e => setForm({ ...form, dueDate: e.target.value })}
+                                onClick={() => dateRef.current?.showPicker()}
                             />
                         </div>
                         <div style={{ position: 'relative' }}>

@@ -114,10 +114,11 @@ export default function NotificationsWidget() {
                     border: 'none',
                     color: notificationCount > 0 ? '#f59e0b' : 'var(--color-text-muted)',
                     cursor: 'pointer',
-                    padding: '0.5rem'
+                    padding: '0.5rem',
+                    top: '2px'
                 }}
             >
-                <Bell size={20} />
+                <Bell size={22} />
                 {notificationCount > 0 && (
                     <span style={{
                         position: 'absolute',

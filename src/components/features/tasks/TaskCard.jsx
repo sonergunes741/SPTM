@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Clock, Tag, Archive, Target, ListChecks } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Tag, Archive, Target, ListChecks, AlarmClock } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 
@@ -25,8 +25,9 @@ export default function TaskCard({ task, onClick, compact = false }) {
         : null;
 
     // Date Logic
-    const getDueDateStyle = (dueDateStr) => {
-        if (!dueDateStr) return {};
+    // Date Logic
+    const getDueDateInfo = (dueDateStr) => {
+        if (!dueDateStr) return { style: {}, isUrgent: false };
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const due = new Date(dueDateStr);
@@ -35,10 +36,19 @@ export default function TaskCard({ task, onClick, compact = false }) {
         const diffTime = due - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays <= 0) return { color: '#ef4444', fontWeight: 600 }; // Red - Overdue or Today
-        if (diffDays <= 3) return { color: '#f59e0b', fontWeight: 500 }; // Orange - Upcoming within 3 days
-        return { color: 'rgba(255, 255, 255, 0.9)' }; // White - Default Future
+        // Urgent if 3 days or less (including overdue)
+        const isUrgent = diffDays <= 3;
+
+        return {
+            style: {
+                color: isUrgent ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.7)',
+                fontWeight: isUrgent ? 600 : 500
+            },
+            isUrgent
+        };
     };
+
+    const dateInfo = getDueDateInfo(task.dueDate);
 
     return (
         <div
@@ -75,7 +85,8 @@ export default function TaskCard({ task, onClick, compact = false }) {
                     color: isDone ? 'rgba(255,255,255,0.4)' : 'var(--color-text-main)', // Faded text
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     lineHeight: compact ? '1.2' : 'normal',
-                    marginBottom: 0
+                    marginBottom: 0,
+                    marginLeft: '0.2rem'
                 }}>
                     {task.title}
                 </h4>
@@ -86,16 +97,16 @@ export default function TaskCard({ task, onClick, compact = false }) {
                     {linkedItem && (
                         <span style={{
                             display: 'flex', alignItems: 'center', gap: '0.3rem',
-                            color: '#818cf8',
-                            background: 'rgba(99, 102, 241, 0.15)',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            background: 'rgba(255, 255, 255, 0.08)',
                             padding: '2px 8px',
                             borderRadius: '6px',
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
                             letterSpacing: '0.3px',
                             whiteSpace: 'nowrap' // Enforce single line
                         }}>
-                            <Target size={12} style={{ flexShrink: 0 }} />
+                            <Target size={12} style={{ flexShrink: 0, opacity: 1 }} />
                             {(() => {
                                 const limit = compact ? 30 : 15;
                                 return (
@@ -135,10 +146,13 @@ export default function TaskCard({ task, onClick, compact = false }) {
                                 fontSize: '0.75rem',
                                 fontWeight: 500,
                                 background: 'rgba(255, 255, 255, 0.08)',
-                                color: 'rgba(255, 255, 255, 0.9)', // Explicit default color
-                                ...getDueDateStyle(task.dueDate)
+                                ...dateInfo.style
                             }}>
-                                <Clock size={12} style={{ opacity: 1 }} />
+                                {dateInfo.isUrgent ? (
+                                    <AlarmClock size={13} style={{ opacity: 1 }} />
+                                ) : (
+                                    <Clock size={12} style={{ opacity: 1 }} />
+                                )}
                                 {new Date(task.dueDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                             </span>
                         </div>
@@ -163,7 +177,7 @@ export default function TaskCard({ task, onClick, compact = false }) {
                 display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.25rem'
             } : {
                 position: 'absolute',
-                bottom: '0.5rem',
+                bottom: isDone ? '0.25rem' : '0.5rem',
                 right: '0.5rem',
                 display: 'flex',
                 alignItems: 'center',

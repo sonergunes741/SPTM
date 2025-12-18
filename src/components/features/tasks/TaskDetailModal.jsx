@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 import {
-    X, CheckCircle2, Circle, Plus, Trash2, Clock, Tag, Target,
-    ListChecks, Edit2, Save, Calendar, Archive
+    X, CheckCircle2, Circle, Plus, Trash2, Tag, Target, ChevronDown,
+    ListChecks, Edit2, Save, Calendar, Archive, Flame, Star
 } from 'lucide-react';
 
 export default function TaskDetailModal({ task, onClose }) {
-    const { updateTask, deleteTask, deletePermanently, toggleTimer } = useTasks();
+    const { updateTask, deleteTask, deletePermanently, contexts } = useTasks();
     const { visions = [], values = [], missions = [] } = useMission();
 
+    const dateInputRef = useRef(null);
     const [editMode, setEditMode] = useState(false);
     const [form, setForm] = useState({
         title: task.title || '',
@@ -22,35 +23,8 @@ export default function TaskDetailModal({ task, onClose }) {
         subtasks: task.subtasks || []
     });
     const [newSubtask, setNewSubtask] = useState('');
-
-    // Timer Logic
-    const [elapsed, setElapsed] = useState(task.timeSpent || 0);
-    const isRunning = !!task.timerStartedAt;
-
-    useEffect(() => {
-        let interval;
-        if (isRunning) {
-            const start = new Date(task.timerStartedAt).getTime();
-            // Upkeep live display
-            setElapsed((task.timeSpent || 0) + (Date.now() - start));
-            
-            interval = setInterval(() => {
-                setElapsed((task.timeSpent || 0) + (Date.now() - start));
-            }, 1000);
-        } else {
-            setElapsed(task.timeSpent || 0);
-        }
-        return () => clearInterval(interval);
-    }, [task.timeSpent, task.timerStartedAt, isRunning]);
-
-    const formatDuration = (ms) => {
-        if (!ms) return "0m";
-        const seconds = Math.floor((ms / 1000) % 60);
-        const minutes = Math.floor((ms / (1000 * 60)) % 60);
-        const hours = Math.floor((ms / (1000 * 60 * 60)));
-        if (hours > 0) return `${hours}h ${minutes}m`;
-        return `${minutes}m ${seconds}s`;
-    };
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showContextSelector, setShowContextSelector] = useState(false);
 
     useEffect(() => {
         setForm({
@@ -129,7 +103,8 @@ export default function TaskDetailModal({ task, onClose }) {
                     borderBottom: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start'
+                    alignItems: 'flex-start',
+                    gap: '1rem'
                 }}>
                     <div style={{ flex: 1 }}>
                         {editMode ? (
@@ -153,67 +128,63 @@ export default function TaskDetailModal({ task, onClose }) {
                         )}
 
                         {/* Priority Tags */}
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.75rem' }}>
                             {form.urge && (
                                 <span style={{
-                                    padding: '0.25rem 0.5rem',
-                                    background: 'rgba(239, 68, 68, 0.2)',
-                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '0.2rem 0.6rem',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '6px',
                                     fontSize: '0.75rem',
-                                    color: '#ef4444'
+                                    fontWeight: 500,
+                                    color: '#f43f5e', // Rose
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem'
                                 }}>
-                                    ⚡ Urgent
+                                    <Flame size={12} fill="#f43f5e" fillOpacity={0.2} /> Urgent
                                 </span>
                             )}
                             {form.imp && (
                                 <span style={{
-                                    padding: '0.25rem 0.5rem',
-                                    background: 'rgba(99, 102, 241, 0.2)',
-                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '0.2rem 0.6rem',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '6px',
                                     fontSize: '0.75rem',
-                                    color: '#6366f1'
+                                    fontWeight: 500,
+                                    color: '#fbbf24', // Gold
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem'
                                 }}>
-                                    ⭐ Important
+                                    <Star size={12} fill="#fbbf24" fillOpacity={0.2} /> Important
                                 </span>
                             )}
                             {linkedItem && (
                                 <span style={{
-                                    padding: '0.25rem 0.5rem',
-                                    background: 'rgba(168, 85, 247, 0.2)',
-                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '0.2rem 0.6rem',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '6px',
                                     fontSize: '0.75rem',
-                                    color: '#a855f7',
+                                    fontWeight: 500,
+                                    color: '#818cf8', // Iris
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.25rem'
+                                    gap: '0.3rem'
                                 }}>
-                                    <Target size={12} /> {linkedItem.text?.slice(0, 20)}...
+                                    <Target size={12} style={{ opacity: 1 }} />
+                                    {linkedItem.text?.length > 30
+                                        ? linkedItem.text.slice(0, 30) + '...'
+                                        : linkedItem.text}
                                 </span>
                             )}
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {/* Timer Control */}
-                         <button 
-                            onClick={() => toggleTimer(task.id)} 
-                            className="btn btn-ghost" 
-                            style={{ 
-                                padding: '0.5rem 0.75rem', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.5rem',
-                                color: isRunning ? '#10b981' : 'inherit',
-                                background: isRunning ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                                border: isRunning ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent'
-                            }}
-                            title={isRunning ? "Stop Timer" : "Start Timer"}
-                        >
-                            <Clock size={18} className={isRunning ? "animate-pulse" : ""} />
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                {formatDuration(elapsed)}
-                            </span>
-                        </button>
+
 
                         {editMode ? (
                             <button onClick={handleSave} className="btn btn-primary" style={{ padding: '0.5rem' }}>
@@ -244,16 +215,19 @@ export default function TaskDetailModal({ task, onClose }) {
                             </label>
                             {editMode ? (
                                 <input
+                                    ref={dateInputRef}
                                     type="date"
                                     value={form.dueDate}
                                     onChange={e => setForm({ ...form, dueDate: e.target.value })}
+                                    onClick={() => dateInputRef.current?.showPicker()}
                                     style={{
                                         width: '100%',
                                         padding: '0.5rem',
                                         borderRadius: 'var(--radius-sm)',
                                         border: '1px solid rgba(255,255,255,0.1)',
                                         background: 'rgba(0,0,0,0.2)',
-                                        color: 'white'
+                                        color: 'white',
+                                        cursor: 'pointer'
                                     }}
                                 />
                             ) : (
@@ -265,27 +239,91 @@ export default function TaskDetailModal({ task, onClose }) {
                                 <Tag size={14} /> Context
                             </label>
                             {editMode ? (
-                                <select
-                                    value={form.context}
-                                    onChange={e => setForm({ ...form, context: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.5rem',
-                                        borderRadius: 'var(--radius-sm)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        background: 'rgba(0,0,0,0.2)',
-                                        color: 'white'
-                                    }}
-                                >
-                                    <option value="@home">@home</option>
-                                    <option value="@work">@work</option>
-                                    <option value="@errands">@errands</option>
-                                    <option value="@computer">@computer</option>
-                                    <option value="@phone">@phone</option>
-                                    <option value="@waiting">@waiting</option>
-                                </select>
+                                <div style={{ position: 'relative' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowContextSelector(!showContextSelector)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.6rem 2rem 0.6rem 0.6rem',
+                                            borderRadius: 'var(--radius-sm)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            background: 'rgba(0,0,0,0.2)',
+                                            color: 'white',
+                                            textAlign: 'left',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            cursor: 'pointer',
+                                            minHeight: '42px',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        {contexts.find(c => c.name === form.context) ? (
+                                            <>
+                                                <span style={{ marginRight: '0.5rem', fontSize: '1rem' }}>
+                                                    {contexts.find(c => c.name === form.context).icon}
+                                                </span>
+                                                {form.context}
+                                            </>
+                                        ) : (
+                                            form.context
+                                        )}
+                                        <ChevronDown size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', transform: showContextSelector ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)', transition: 'transform 0.2s' }} />
+                                    </button>
+
+                                    {showContextSelector && (
+                                        <>
+                                            <div
+                                                style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                                                onClick={() => setShowContextSelector(false)}
+                                            />
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: 0,
+                                                width: '100%',
+                                                marginTop: '0.5rem',
+                                                background: '#1e293b',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: 'var(--radius-md)',
+                                                zIndex: 50,
+                                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                                                maxHeight: '160px',
+                                                overflowY: 'auto'
+                                            }}>
+                                                {contexts.map(c => (
+                                                    <button
+                                                        key={c.id}
+                                                        type="button"
+                                                        onClick={() => { setForm({ ...form, context: c.name }); setShowContextSelector(false); }}
+                                                        className="btn btn-ghost"
+                                                        style={{
+                                                            width: '100%',
+                                                            justifyContent: 'flex-start',
+                                                            padding: '0.4rem 0.6rem',
+                                                            fontSize: '0.9rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.6rem',
+                                                            background: form.context === c.name ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                            color: form.context === c.name ? 'white' : 'var(--color-text-muted)'
+                                                        }}
+                                                    >
+                                                        <span style={{ fontSize: '1rem' }}>{c.icon}</span>
+                                                        {c.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             ) : (
-                                <span style={{ fontSize: '0.9rem' }}>{form.context}</span>
+                                <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {contexts.find(c => c.name === form.context) && (
+                                        <span>{contexts.find(c => c.name === form.context).icon}</span>
+                                    )}
+                                    {form.context}
+                                </span>
                             )}
                         </div>
                     </div>
@@ -454,6 +492,8 @@ export default function TaskDetailModal({ task, onClose }) {
                     </div>
                 </div>
 
+
+
                 {/* Footer */}
                 <div style={{
                     padding: '1rem 1.5rem',
@@ -465,44 +505,77 @@ export default function TaskDetailModal({ task, onClose }) {
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                         Created: {new Date(task.createdAt).toLocaleDateString()}
                     </span>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button
-                            onClick={() => { deleteTask(task.id); onClose(); }} // deleteTask is Archive in context
-                            className="btn"
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: 'none',
-                                color: 'var(--color-text-muted)',
-                                padding: '0.5rem 1rem',
-                                fontSize: '0.85rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <Archive size={16} /> Archive
-                        </button>
-                        <button
-                            onClick={() => { 
-                                if(window.confirm('Are you sure you want to delete this task permanently?')) {
-                                    deletePermanently(task.id); 
-                                    onClose(); 
-                                }
-                            }}
-                            className="btn"
-                            style={{
-                                background: 'rgba(239, 68, 68, 0.1)',
-                                border: 'none',
-                                color: '#ef4444',
-                                padding: '0.5rem 1rem',
-                                fontSize: '0.85rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <Trash2 size={16} /> Delete
-                        </button>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                        {showDeleteConfirm ? (
+                            <>
+                                <span style={{ fontSize: '0.85rem', color: '#ef4444', fontWeight: 500 }}>
+                                    Permanently delete?
+                                </span>
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="btn btn-ghost"
+                                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        deletePermanently(task.id);
+                                        onClose();
+                                    }}
+                                    className="btn"
+                                    style={{
+                                        background: '#ef4444',
+                                        border: 'none',
+                                        color: 'white',
+                                        padding: '0.4rem 1rem',
+                                        fontSize: '0.85rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontWeight: 500,
+                                        boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
+                                    }}
+                                >
+                                    Confirm
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => { deleteTask(task.id); onClose(); }}
+                                    className="btn"
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        border: 'none',
+                                        color: 'var(--color-text-muted)',
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '0.85rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        borderRadius: 'var(--radius-sm)'
+                                    }}
+                                >
+                                    <Archive size={16} /> Archive
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="btn"
+                                    style={{
+                                        background: 'rgba(239, 68, 68, 0.1)',
+                                        border: 'none',
+                                        color: '#ef4444',
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '0.85rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        borderRadius: 'var(--radius-sm)'
+                                    }}
+                                >
+                                    <Trash2 size={16} /> Delete
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
