@@ -143,7 +143,7 @@ export default function CoveyMatrix() {
                 gap: '1.5rem',
                 flex: 1,
                 minHeight: 0,
-                overflowY: 'auto', // Allow scroll of whole matrix container
+                overflowY: 'auto',
                 paddingRight: '0.5rem'
             }}>
                 <Quadrant id="q1" title="Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
@@ -181,7 +181,7 @@ function DraggableMatrixItem({ task, viewMode, onClick }) {
         touchAction: 'none',
         cursor: isDragging ? 'grabbing' : 'grab',
         zIndex: isDragging ? 999 : 'auto',
-        height: viewMode === 'list' ? 'auto' : '100%'
+        height: 'auto' // FIX: Always auto to prevent stretching
     };
 
     return (
@@ -206,7 +206,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 background: isOver ? `rgba(255, 255, 255, 0.08)` : 'rgba(30, 41, 59, 0.4)',
                 border: '1px solid rgba(255,255,255,0.05)',
                 boxShadow: isOver ? `0 0 20px ${color}20` : 'none',
-                height: '320px', // FIXED HEIGHT for approx 3.5 tasks
+                height: '280px', // FIX: Reduced slightly for perfectly visible 3.5 items
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden'
@@ -221,7 +221,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                flexShrink: 0 // Prevent header shrink
+                flexShrink: 0
             }}>
                 <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {title}
@@ -234,11 +234,12 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
             {/* Task Area */}
             <div style={{
                 flex: 1,
-                overflowY: 'auto', // Scroll inside if content exceeds height
+                overflowY: 'auto',
                 padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.75rem'
+                gap: '0.75rem',
+                alignItems: 'stretch' // Ensure items stretch horizontally
             }}>
                 {tasks.map(t => (
                     <DraggableMatrixItem
@@ -259,7 +260,6 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
     );
 }
 
-// ... TaskModal (same as before) ...
 function TaskModal({ onClose, onSave, contexts }) {
     const { visions = [], values = [], missions = [] } = useMission();
     const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
