@@ -4,8 +4,8 @@ import { useMission } from '../../../context/MissionContext';
 import TaskCard from './TaskCard';
 import TaskDetailModal from './TaskDetailModal';
 import QuickInboxModal from '../inbox/QuickInboxModal';
-import ContextManagerModal from './ContextManagerModal'; // New Import
-import { Plus, X, LayoutGrid, List, Zap, Filter, Mic, Settings } from 'lucide-react'; // Added Settings
+import ContextManagerModal from './ContextManagerModal';
+import { Plus, X, LayoutGrid, List, Zap, Filter, Mic, Settings } from 'lucide-react';
 import useVoiceInput from '../../../hooks/useVoiceInput';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -17,7 +17,7 @@ export default function CoveyMatrix() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
-    const [showContextManager, setShowContextManager] = useState(false); // New State
+    const [showContextManager, setShowContextManager] = useState(false);
 
     // Filter Logic
     const isVisible = (t) => {
@@ -136,19 +136,21 @@ export default function CoveyMatrix() {
                 </div>
             </div>
 
-            {/* Matrix Grid */}
+            {/* Matrix Grid - Expanded & Filled */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: viewMode === 'grid' ? '1fr 1fr' : '1fr',
-                gap: '1rem',
+                gridAutoRows: 'minmax(300px, 1fr)', // Allows growing, minimum 300px (~5 tasks)
+                gap: '1.5rem',
                 flex: 1,
                 minHeight: 0,
-                overflow: 'hidden'
+                overflowY: 'auto', // Scroll whole grid container
+                paddingRight: '0.5rem'
             }}>
-                <Quadrant id="q1" title="Q1: Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q2" title="Q2: Not Urgent & Important" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q3" title="Q3: Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} onTaskClick={setSelectedTask} />
-                <Quadrant id="q4" title="Q4: Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant id="q1" title="Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant id="q2" title="Important & Not Urgent" tasks={q2} color="var(--color-primary)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant id="q3" title="Urgent & Not Important" tasks={q3} color="var(--color-warning)" viewMode={viewMode} onTaskClick={setSelectedTask} />
+                <Quadrant id="q4" title="Not Urgent & Not Important" tasks={q4} color="var(--color-text-muted)" viewMode={viewMode} onTaskClick={setSelectedTask} />
             </div>
 
             {showForm && (
@@ -200,31 +202,44 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
             ref={setNodeRef}
             style={{
                 borderRadius: 'var(--radius-lg)',
-                padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
-                borderTop: `4px solid ${color}`,
-                transition: 'all 0.3s ease',
-                background: isOver
-                    ? `rgba(255, 255, 255, 0.1)`
-                    : 'rgba(30, 41, 59, 0.4)',
-                border: isOver ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.05)',
+                background: isOver ? `rgba(255, 255, 255, 0.08)` : 'rgba(30, 41, 59, 0.4)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                boxShadow: isOver ? `0 0 20px ${color}20` : 'none',
                 height: '100%',
+                transition: 'all 0.3s ease',
+                position: 'relative',
                 overflow: 'hidden'
             }}
         >
-            <h4 style={{ marginBottom: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {title} <span style={{ opacity: 0.5, marginLeft: '0.5rem' }}>{tasks.length}</span>
-            </h4>
+            {/* Color Strip Header */}
             <div style={{
-                overflowY: 'auto',
-                paddingRight: '0.25rem',
+                borderTop: `6px solid ${color}`,
+                background: `linear-gradient(to bottom, ${color}15, transparent)`,
+                padding: '1rem',
+                borderBottom: '1px solid rgba(255,255,255,0.03)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {title}
+                </h4>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.5rem', borderRadius: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                    {tasks.length}
+                </span>
+            </div>
+
+            {/* Task Area */}
+            <div style={{
                 flex: 1,
-                display: viewMode === 'grid' ? 'grid' : 'flex',
-                flexDirection: viewMode === 'list' ? 'column' : undefined,
-                gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(140px, 1fr))' : undefined,
-                gap: '0.5rem',
-                alignContent: 'start'
+                minHeight: '200px',
+                overflowY: 'auto',
+                padding: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
             }}>
                 {tasks.map(t => (
                     <DraggableMatrixItem
@@ -234,6 +249,12 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                         onClick={() => onTaskClick(t)}
                     />
                 ))}
+
+                {tasks.length === 0 && (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.1, fontStyle: 'italic' }}>
+                        Empty
+                    </div>
+                )}
             </div>
         </div>
     );
