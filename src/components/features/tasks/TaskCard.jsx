@@ -70,9 +70,9 @@ export default function TaskCard({ task, onClick, compact = false }) {
             onClick={onClick}
             className={`glass-panel ${isExiting ? 'fade-out-exit' : ''}`}
             style={{
-                padding: compact ? '0.5rem' : '0.75rem',
+                padding: compact ? '0.4rem' : '0.55rem 0.75rem', // Reduced vertical padding
                 borderRadius: 'var(--radius-md)',
-                marginBottom: compact ? '0' : '0.5rem',
+                marginBottom: compact ? '0' : '0', // Removed margin bottom as gap handles it
                 cursor: 'pointer',
                 display: 'flex',
                 gap: compact ? '0.5rem' : '0.75rem',
@@ -90,7 +90,7 @@ export default function TaskCard({ task, onClick, compact = false }) {
             onMouseEnter={e => !isExiting && (e.currentTarget.style.transform = 'translateY(-2px)')}
             onMouseLeave={e => !isExiting && (e.currentTarget.style.transform = 'translateY(0)')}
         >
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}> {/* Reduced gap */}
                 <h4 style={{
                     fontSize: isDone ? '0.8rem' : (compact ? '0.8rem' : '0.9rem'),
                     fontWeight: 500,
@@ -104,24 +104,24 @@ export default function TaskCard({ task, onClick, compact = false }) {
                 </h4>
 
                 {!compact && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.1rem' }}> {/* Reduced gap & top margin */}
                         {/* Timer Control & Time */}
-                        <div 
+                        <div
                             onClick={handleTimer}
-                            style={{ 
+                            style={{
                                 display: 'flex', alignItems: 'center', gap: '0.3rem',
                                 color: isRunning ? '#10b981' : (elapsed > 0 ? 'var(--color-text-main)' : 'var(--color-text-muted)'),
                                 fontWeight: isRunning ? 600 : 400,
                                 cursor: 'pointer',
                                 background: isRunning ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                                padding: '2px 6px',
+                                padding: '1px 5px', // Reduced padding
                                 borderRadius: '4px',
                                 transition: 'all 0.2s'
                             }}
                             title={isRunning ? "Stop Timer" : "Start Timer"}
                         >
-                             <Clock size={12} className={isRunning ? "animate-pulse" : ""} />
-                             <span>{elapsed > 0 ? formatDuration(elapsed) : "Start"}</span>
+                            <Clock size={11} className={isRunning ? "animate-pulse" : ""} />
+                            <span>{elapsed > 0 ? formatDuration(elapsed) : "Start"}</span>
                         </div>
 
                         {task.dueDate && (

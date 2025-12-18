@@ -13,7 +13,7 @@ import { CSS } from '@dnd-kit/utilities';
 export default function CoveyMatrix() {
     const { tasks, addTask, contexts } = useTasks();
     const [showForm, setShowForm] = useState(false);
-    const [viewMode, setViewMode] = useState('list'); // Default to list view inside quadrants
+    const [viewMode, setViewMode] = useState('list');
     const [selectedTask, setSelectedTask] = useState(null);
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
@@ -139,7 +139,7 @@ export default function CoveyMatrix() {
             {/* Matrix Grid - Always 2x2 for Matrix Layout */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr', // FIXED: 2x2 Layout
+                gridTemplateColumns: '1fr 1fr',
                 gap: '1.5rem',
                 flex: 1,
                 minHeight: 0,
@@ -206,7 +206,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 background: isOver ? `rgba(255, 255, 255, 0.08)` : 'rgba(30, 41, 59, 0.4)',
                 border: '1px solid rgba(255,255,255,0.05)',
                 boxShadow: isOver ? `0 0 20px ${color}20` : 'none',
-                height: '280px', // Fixed height for 3.5 items
+                height: '280px',
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden'
@@ -240,9 +240,9 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 display: viewMode === 'grid' ? 'grid' : 'flex',
                 flexDirection: viewMode === 'list' ? 'column' : undefined,
                 gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(130px, 1fr))' : undefined,
-                gap: '0.75rem',
+                gap: '0.5rem', // Reduced Gap
                 alignItems: viewMode === 'list' ? 'stretch' : 'start',
-                alignContent: 'start' // For grid view start alignment
+                alignContent: 'start'
             }}>
                 {tasks.map(t => (
                     <DraggableMatrixItem
@@ -271,6 +271,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
         </div>
     );
 }
+
 
 function TaskModal({ onClose, onSave, contexts }) {
     const { visions = [], values = [], missions = [] } = useMission();
