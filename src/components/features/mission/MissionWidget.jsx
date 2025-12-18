@@ -1,89 +1,191 @@
 import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
-import { Target, Compass, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Target, Heart } from 'lucide-react';
 
 export default function MissionWidget() {
-    const { getRootMissions, visions = [], values = [] } = useMission();
-    const rootMissions = getRootMissions();
-    const mission = rootMissions.length > 0 ? rootMissions[0]?.text : '';
+    const { getRootMissions, values = [] } = useMission();
+    const missions = getRootMissions();
 
-    // If nothing defined, show placeholder
-    const hasData = mission || visions.length > 0 || values.length > 0;
-    if (!hasData) return (
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px dashed rgba(255,255,255,0.2)' }}>
-            <Target className="text-muted" />
-            <span style={{ color: 'var(--color-text-muted)' }}>You haven't defined your compass yet. Go to "My Mission" to start.</span>
-        </div>
-    );
+    const [missionIndex, setMissionIndex] = useState(0);
+    const [valueIndex, setValueIndex] = useState(0);
+
+    const nextMission = () => {
+        if (missions.length === 0) return;
+        setMissionIndex((prev) => (prev + 1) % missions.length);
+    };
+    const prevMission = () => {
+        if (missions.length === 0) return;
+        setMissionIndex((prev) => (prev - 1 + missions.length) % missions.length);
+    };
+
+    const nextValue = () => {
+        if (values.length === 0) return;
+        setValueIndex((prev) => (prev + 1) % values.length);
+    };
+    const prevValue = () => {
+        if (values.length === 0) return;
+        setValueIndex((prev) => (prev - 1 + values.length) % values.length);
+    };
 
     return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <CarouselCard
+                title="MISSION"
+                content={missions.length > 0 ? missions[missionIndex]?.text : "Define your mission"}
+                onNext={nextMission}
+                onPrev={prevMission}
+                hasData={missions.length > 0}
+                icon={<Target size={14} />}
+                count={missions.length}
+                currentIndex={missionIndex}
+                accentColor="#818cf8" // Soft Indigo
+            />
+            <CarouselCard
+                title="VALUE"
+                content={values.length > 0 ? values[valueIndex]?.text : "Define your core values"}
+                onNext={nextValue}
+                onPrev={prevValue}
+                hasData={values.length > 0}
+                icon={<Heart size={14} />}
+                count={values.length}
+                currentIndex={valueIndex}
+                accentColor="#f472b6" // Soft Rose
+            />
+        </div>
+    );
+}
+
+function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, currentIndex, accentColor }) {
+    return (
         <div className="glass-panel" style={{
-            padding: '1.5rem 2.5rem',
+            padding: '2rem 1.5rem',
             borderRadius: 'var(--radius-lg)',
-            marginBottom: '1rem',
-            // Deep space background with a "North Star" cool shine
-            background: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.8) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '2rem',
+            textAlign: 'center',
             position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+            minHeight: '180px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
         }}>
-            {/* Custom North Star Icon & Label */}
-            <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                alignItems: 'center', 
-                gap: '0.5rem', 
-                color: 'white',
-                minWidth: '100px',
-                textAlign: 'center'
+            {/* Header with Accent Color */}
+            <div style={{
+                position: 'absolute',
+                top: '1.5rem',
+                left: 0,
+                right: 0,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: accentColor, // Applied Accent Color
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                opacity: 0.9,
+                filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.3))' // Slight glow for elegance
             }}>
-                <div style={{ 
-                    filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.9))', 
-                    marginBottom: '0.25rem'
-                }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        {/* 8-Pointed Compass Rose: 4 Main (Long), 4 Diagonal (Short) */}
-                        <path d="M12 1 L13 10 L 17 6 L 14 11 L 23 12 L 14 13 L 17 18 L 13 14 L 12 23 L 11 14 L 7 18 L 10 13 L 1 12 L 10 11 L 7 6 L 11 10 Z" />
-                    </svg>
-                </div>
-                <span style={{ 
-                    fontSize: '0.65rem', 
-                    fontWeight: 800, 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '2px',
-                    opacity: 0.9,
-                    color: 'rgba(255,255,255,0.8)'
-                }}>
-                    North Star
-                </span>
+                {React.cloneElement(icon, { color: accentColor })} {title}
             </div>
 
-            {/* Separator with gradient fade */}
-            <div style={{ 
-                width: '1px', 
-                height: '40px', 
-                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent)' 
-            }}></div>
-
-            {/* Mission Statement */}
-            <div style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 500, 
-                fontFamily: 'serif', 
-                fontStyle: 'italic', 
-                color: 'white',
-                flex: 1,
-                textAlign: 'center',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                lineHeight: 1.4
+            {/* Content */}
+            <div style={{
+                padding: '0 3rem',
+                fontSize: content.length > 60 ? '1.1rem' : '1.35rem',
+                fontWeight: 600,
+                color: '#fff',
+                lineHeight: 1.5,
+                marginTop: '1.25rem',
+                fontFamily: 'var(--font-heading, inherit)',
+                opacity: hasData ? 1 : 0.5,
+                fontStyle: hasData ? 'normal' : 'italic',
+                maxWidth: '100%',
+                wordWrap: 'break-word',
+                textShadow: '0 2px 10px rgba(0,0,0,0.2)' // Subtle depth
             }}>
-                {mission ? `"${mission}"` : <span className="text-muted italic" style={{ fontSize: '0.9rem', fontStyle: 'normal', fontFamily: 'var(--font-sans)' }}>Define your mission in "My Mission" to set your North Star.</span>}
+                {content}
             </div>
+
+            {/* Controls */}
+            {hasData && count > 1 && (
+                <>
+                    <button
+                        onClick={onPrev}
+                        style={{
+                            position: 'absolute',
+                            left: '1rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--color-text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.75rem',
+                            borderRadius: '50%',
+                            transition: 'all 0.2s',
+                            opacity: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.opacity = 1; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.opacity = 0.5; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                        <ChevronLeft size={24} strokeWidth={1.5} />
+                    </button>
+
+                    <button
+                        onClick={onNext}
+                        style={{
+                            position: 'absolute',
+                            right: '1rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--color-text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.75rem',
+                            borderRadius: '50%',
+                            transition: 'all 0.2s',
+                            opacity: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.opacity = 1; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.opacity = 0.5; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                        <ChevronRight size={24} strokeWidth={1.5} />
+                    </button>
+
+                    {/* Pagination Indicators with Accent */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '1rem',
+                        left: 0,
+                        right: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '0.4rem'
+                    }}>
+                        {Array.from({ length: count }).map((_, i) => (
+                            <div key={i} style={{
+                                width: '4px',
+                                height: '4px',
+                                borderRadius: '50%',
+                                background: i === currentIndex ? accentColor : 'rgba(255,255,255,0.2)', // Active dot uses accent
+                                boxShadow: i === currentIndex ? `0 0 5px ${accentColor}` : 'none',
+                                transition: 'all 0.3s'
+                            }} />
+                        ))}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

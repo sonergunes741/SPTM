@@ -68,7 +68,10 @@ export default function LoginModal({ isOpen, onClose, initialView = "login" }) {
                         credential: "mock-admin-token",
                     };
                     loginUser(mockUser);
-                    onClose();
+                    setTimeout(() => {
+                        onClose();
+                        setIsLoading(false);
+                    }, 100);
                 } else {
                     alert("Invalid credentials! Try admin / 1234");
                     setIsLoading(false);
