@@ -136,15 +136,14 @@ export default function CoveyMatrix() {
                 </div>
             </div>
 
-            {/* Matrix Grid - Expanded & Filled */}
+            {/* Matrix Grid - Content */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: viewMode === 'grid' ? '1fr 1fr' : '1fr',
-                gridAutoRows: 'minmax(300px, 1fr)', // Allows growing, minimum 300px (~5 tasks)
                 gap: '1.5rem',
                 flex: 1,
                 minHeight: 0,
-                overflowY: 'auto', // Scroll whole grid container
+                overflowY: 'auto', // Allow scroll of whole matrix container
                 paddingRight: '0.5rem'
             }}>
                 <Quadrant id="q1" title="Urgent & Important" tasks={q1} color="var(--color-danger)" viewMode={viewMode} onTaskClick={setSelectedTask} />
@@ -207,7 +206,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 background: isOver ? `rgba(255, 255, 255, 0.08)` : 'rgba(30, 41, 59, 0.4)',
                 border: '1px solid rgba(255,255,255,0.05)',
                 boxShadow: isOver ? `0 0 20px ${color}20` : 'none',
-                height: '100%',
+                height: '320px', // FIXED HEIGHT for approx 3.5 tasks
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden'
@@ -221,7 +220,8 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 borderBottom: '1px solid rgba(255,255,255,0.03)',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                flexShrink: 0 // Prevent header shrink
             }}>
                 <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {title}
@@ -234,8 +234,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
             {/* Task Area */}
             <div style={{
                 flex: 1,
-                minHeight: '200px',
-                overflowY: 'auto',
+                overflowY: 'auto', // Scroll inside if content exceeds height
                 padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -260,6 +259,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
     );
 }
 
+// ... TaskModal (same as before) ...
 function TaskModal({ onClose, onSave, contexts }) {
     const { visions = [], values = [], missions = [] } = useMission();
     const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
