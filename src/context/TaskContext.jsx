@@ -73,6 +73,10 @@ export function TaskProvider({ children }) {
         setContexts(prev => prev.filter(c => c.id !== id));
     };
 
+    const restoreContexts = () => {
+        setContexts(DEFAULT_CONTEXTS);
+    };
+
     return (
         <TaskContext.Provider value={{
             tasks,
@@ -86,6 +90,7 @@ export function TaskProvider({ children }) {
             toggleTaskStatus,
             addContext,
             deleteContext,
+            restoreContexts,
             toggleTimer: (id) => {
                 const now = Date.now();
                 setTasks(prev => prev.map(t => {

@@ -20,6 +20,7 @@ import WelcomePage from "./components/layout/WelcomePage";
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isMissionCollapsed, setMissionCollapsed] = useState(false);
   const { updateTask, tasks } = useTasks();
   const [activeDragId, setActiveDragId] = useState(null);
   const { isAuthenticated, logout, googleUser } = useGoogleCalendar();
@@ -74,7 +75,7 @@ function AppContent() {
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "2rem",
+          padding: "1.5rem 2rem 0.75rem 2rem",
           position: "relative",
         }}
       >
@@ -96,14 +97,14 @@ function AppContent() {
         {activeTab !== "settings" && (
           <header
             style={{
-              marginBottom: "2rem",
+              marginBottom: "1rem",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
             <div>
-              <h2 style={{ textTransform: "capitalize" }}>
+              <h2 style={{ textTransform: "capitalize", margin: 0 }}>
                 {activeTab === "archive"
                   ? "Archived Tasks"
                   : activeTab === "review"
@@ -146,17 +147,46 @@ function AppContent() {
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "1.5rem"
+                  gap: "1rem"
                 }}
               >
-                <div style={{ flexShrink: 0 }}>
-                  <MissionWidget />
+                <div style={{ flexShrink: 0, transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)', marginBottom: '-0.25rem' }}>
+                  <MissionWidget collapsed={isMissionCollapsed} />
+                </div>
+
+                {/* Collapsible Handle */}
+                <div
+                  onClick={() => setMissionCollapsed(!isMissionCollapsed)}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0.25rem 0 0.5rem 0',
+                    cursor: 'pointer',
+                    marginTop: isMissionCollapsed ? '0' : '-0.5rem',
+                    zIndex: 10,
+                    position: 'relative'
+                  }}
+                  title={isMissionCollapsed ? "Expand" : "Collapse"}
+                  className="group"
+                >
+                  <div style={{
+                    width: '40px',
+                    height: '4px',
+                    borderRadius: '2px',
+                    background: 'rgba(255,255,255,0.1)',
+                    transition: 'all 0.2s',
+                  }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  />
                 </div>
                 <div
                   style={{
                     flex: 1,
                     minHeight: 0,
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    marginTop: '-0.75rem'
                   }}
                 >
                   <CoveyMatrix />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMission } from '../../../context/MissionContext';
 import { ChevronLeft, ChevronRight, Target, Heart } from 'lucide-react';
 
-export default function MissionWidget() {
+export default function MissionWidget({ collapsed }) {
     const { getRootMissions, values = [] } = useMission();
     const missions = getRootMissions();
 
@@ -27,8 +27,43 @@ export default function MissionWidget() {
         setValueIndex((prev) => (prev - 1 + values.length) % values.length);
     };
 
+    if (collapsed) {
+        return (
+            <div className="glass-panel" style={{
+                padding: '0.75rem 1.5rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '2rem',
+                borderRadius: 'var(--radius-lg)'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1, minWidth: 0 }}>
+                    <Target size={18} color="#a5b4fc" />
+                    <span style={{ fontSize: '0.85rem', color: '#a5b4fc', fontWeight: 700, letterSpacing: '0.05em' }}>MISSION</span>
+                    <span style={{ fontSize: '0.85rem', color: '#ffffff', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: '0.5rem', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                        {missions.length > 0
+                            ? (missions[missionIndex]?.text.length > 100 ? missions[missionIndex]?.text.substring(0, 100) + '...' : missions[missionIndex]?.text)
+                            : "Define your mission"}
+                    </span>
+                </div>
+
+                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1, minWidth: 0 }}>
+                    <Heart size={18} color="#f472b6" />
+                    <span style={{ fontSize: '0.85rem', color: '#f472b6', fontWeight: 700, letterSpacing: '0.05em' }}>VALUE</span>
+                    <span style={{ fontSize: '0.85rem', color: '#ffffff', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: '0.5rem', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                        {values.length > 0
+                            ? (values[valueIndex]?.text.length > 100 ? values[valueIndex]?.text.substring(0, 100) + '...' : values[valueIndex]?.text)
+                            : "Define your core values"}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '0' }}>
             <CarouselCard
                 title="MISSION"
                 content={missions.length > 0 ? missions[missionIndex]?.text : "Define your mission"}
@@ -58,7 +93,7 @@ export default function MissionWidget() {
 function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, currentIndex, accentColor }) {
     return (
         <div className="glass-panel" style={{
-            padding: '2rem 1.5rem',
+            padding: '1.25rem 1rem',
             borderRadius: 'var(--radius-lg)',
             display: 'flex',
             flexDirection: 'column',
@@ -66,7 +101,7 @@ function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, cu
             justifyContent: 'center',
             textAlign: 'center',
             position: 'relative',
-            minHeight: '180px',
+            minHeight: '130px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
@@ -74,7 +109,7 @@ function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, cu
             {/* Header with Accent Color */}
             <div style={{
                 position: 'absolute',
-                top: '1.5rem',
+                top: '0.75rem',
                 left: 0,
                 right: 0,
                 display: 'flex',
@@ -82,7 +117,7 @@ function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, cu
                 alignItems: 'center',
                 gap: '0.5rem',
                 color: accentColor, // Applied Accent Color
-                fontSize: '0.7rem',
+                fontSize: '0.85rem',
                 fontWeight: 700,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
@@ -99,7 +134,7 @@ function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, cu
                 fontWeight: 600,
                 color: '#fff',
                 lineHeight: 1.5,
-                marginTop: '1.25rem',
+                marginTop: '0.5rem',
                 fontFamily: 'var(--font-heading, inherit)',
                 opacity: hasData ? 1 : 0.5,
                 fontStyle: hasData ? 'normal' : 'italic',
@@ -166,7 +201,7 @@ function CarouselCard({ title, content, onNext, onPrev, hasData, icon, count, cu
                     {/* Pagination Indicators with Accent */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '1rem',
+                        bottom: '0.5rem',
                         left: 0,
                         right: 0,
                         display: 'flex',

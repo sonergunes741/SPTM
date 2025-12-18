@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMission } from '../../../context/MissionContext';
 import TaskCard from './TaskCard';
@@ -18,6 +18,7 @@ export default function CoveyMatrix() {
     const [activeContextId, setActiveContextId] = useState('all');
     const [showQuickInbox, setShowQuickInbox] = useState(false);
     const [showContextManager, setShowContextManager] = useState(false);
+    const containerRef = useRef(null);
 
     // Filter Logic
     const isVisible = (t) => {
@@ -44,21 +45,34 @@ export default function CoveyMatrix() {
     const q4 = visibleTasks.filter(t => !t.urge && !t.imp);
 
     return (
-        <div className="glass-panel" style={{
+        <div ref={containerRef} className="glass-panel" style={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            padding: '1.5rem',
+            padding: '1.0rem 1.5rem 1rem 1.5rem',
             borderRadius: 'var(--radius-lg)',
             overflow: 'visible'
         }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 {/* Left: Title & Filter */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div>
-                        <h3 className="text-gradient-primary" style={{ fontSize: '1.5rem', margin: 0, lineHeight: 1 }}>Priorities Matrix</h3>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0 0' }}>Eisenhower Method</p>
+                        <h3
+                            className="text-gradient-primary"
+                            style={{ fontSize: '1.5rem', margin: 0, lineHeight: 1, cursor: 'pointer' }}
+                            onClick={() => containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        >
+                            Priorities Matrix
+                        </h3>
+
+                    </div>
+
+
+                    {/* View Toggle - Controls Tasks View inside Quadrants */}
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button onClick={() => setViewMode('list')} style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="List View"><List size={18} /></button>
+                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Card View"><LayoutGrid size={18} /></button>
                     </div>
 
                     {/* Context Filter & Manager */}
@@ -88,50 +102,86 @@ export default function CoveyMatrix() {
                                     width: '100%'
                                 }}
                             >
-                                <option value="all" style={{ background: '#1e293b' }}>All Contexts</option>
-                                <optgroup label="My Contexts" style={{ background: '#1e293b' }}>
-                                    {contexts.map(c => (
-                                        <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{c.icon} {c.name}</option>
-                                    ))}
-                                </optgroup>
+                                <option value="all" style={{ background: '#1e293b' }}>Context</option>
+                                {contexts.map(c => (
+                                    <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{c.icon} {c.name}</option>
+                                ))}
                             </select>
 
                             {/* Manage Button */}
                             <button
                                 onClick={() => setShowContextManager(true)}
-                                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '0.25rem' }}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--color-text-muted)',
+                                    cursor: 'pointer',
+                                    padding: '0 0 0 0.5rem',
+                                    borderLeft: '1px solid rgba(255,255,255,0.1)',
+                                    marginLeft: '0.5rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    height: '100%'
+                                }}
                                 title="Manage Contexts"
                             >
                                 <Settings size={14} />
                             </button>
                         </div>
                     </div>
+
+
                 </div>
 
                 {/* Right: Actions */}
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', position: 'relative' }}>
-                    {/* View Toggle - Controls Tasks View inside Quadrants */}
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: 'var(--radius-md)', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button onClick={() => setViewMode('list')} style={{ background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="List View"><List size={18} /></button>
-                        <button onClick={() => setViewMode('grid')} style={{ background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', display: 'flex' }} title="Card View"><LayoutGrid size={18} /></button>
-                    </div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', position: 'relative', marginRight: '0.5rem' }}>
+
 
                     {/* Quick Inbox */}
                     <div style={{ position: 'relative' }}>
                         <button
-                            className={`btn ${showQuickInbox ? 'btn-primary' : 'btn-ghost'}`}
+                            className="btn btn-primary"
                             onClick={() => setShowQuickInbox(!showQuickInbox)}
-                            style={{ padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: showQuickInbox ? 'none' : '1px solid rgba(255,255,255,0.1)' }}
+                            style={{
+                                padding: '0.6rem 1.25rem',
+                                fontSize: '0.95rem',
+                                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+                                border: '1px solid transparent',
+                                lineHeight: '1.5',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                minWidth: '150px',
+                                justifyContent: 'center',
+                                background: '#0f172a',
+                                color: 'white'
+                            }}
                         >
-                            <Zap size={18} fill={showQuickInbox ? 'currentColor' : 'none'} />
-                            <span style={{ fontSize: '0.9rem' }}>Quick Inbox</span>
+                            <Zap size={20} color="#f59e0b" fill="#f59e0b" /> Quick Inbox
                         </button>
                         {showQuickInbox && <QuickInboxModal onClose={() => setShowQuickInbox(false)} />}
                     </div>
 
                     {/* New Task */}
-                    <button className="btn btn-primary" onClick={() => setShowForm(true)} style={{ padding: '0.6rem 1.25rem', fontSize: '0.95rem', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)' }}>
-                        <Plus size={20} /> New Task
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => setShowForm(true)}
+                        style={{
+                            padding: '0.6rem 1.25rem 0.6rem 1.25rem',
+                            fontSize: '0.95rem',
+                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+                            border: '1px solid transparent',
+                            lineHeight: '1.5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            minWidth: '150px',
+                            justifyContent: 'flex-start',
+                            background: '#0f172a',
+                            color: 'white'
+                        }}
+                    >
+                        <Plus size={22} color="#6366f1" strokeWidth={5} /> New Task
                     </button>
                 </div>
             </div>
@@ -186,7 +236,7 @@ function DraggableMatrixItem({ task, viewMode, onClick }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <TaskCard task={task} compact={viewMode === 'grid'} onClick={onClick} />
+            <TaskCard task={task} compact={false} onClick={onClick} />
         </div>
     );
 }
@@ -216,7 +266,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
             <div style={{
                 borderTop: `6px solid ${color}`,
                 background: `linear-gradient(to bottom, ${color}15, transparent)`,
-                padding: '1rem',
+                padding: '0.75rem 1rem 0.5rem 1rem',
                 borderBottom: '1px solid rgba(255,255,255,0.03)',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -226,7 +276,7 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
                 <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {title}
                 </h4>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.5rem', borderRadius: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.5rem', borderRadius: '12px', color: '#fff' }}>
                     {tasks.length}
                 </span>
             </div>
@@ -235,11 +285,11 @@ function Quadrant({ id, title, tasks, color, viewMode, onTaskClick }) {
             <div style={{
                 flex: 1,
                 overflowY: 'auto',
-                padding: '1rem',
+                padding: '0.5rem 1rem 1rem 1rem',
                 // DYNAMIC LAYOUT HERE
                 display: viewMode === 'grid' ? 'grid' : 'flex',
                 flexDirection: viewMode === 'list' ? 'column' : undefined,
-                gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(130px, 1fr))' : undefined,
+                gridTemplateColumns: viewMode === 'grid' ? 'repeat(3, 1fr)' : undefined,
                 gap: '0.5rem', // Reduced Gap
                 alignItems: viewMode === 'list' ? 'stretch' : 'start',
                 alignContent: 'start'

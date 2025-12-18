@@ -70,7 +70,7 @@ export default function TaskCard({ task, onClick, compact = false }) {
             onClick={onClick}
             className={`glass-panel ${isExiting ? 'fade-out-exit' : ''}`}
             style={{
-                padding: compact ? '0.4rem' : '0.55rem 0.75rem', // Reduced vertical padding
+                padding: compact ? '0.4rem' : '0.45rem 0.75rem', // Reduced vertical padding
                 borderRadius: 'var(--radius-md)',
                 marginBottom: compact ? '0' : '0', // Removed margin bottom as gap handles it
                 cursor: 'pointer',

@@ -1,9 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { useMission } from '../../../context/MissionContext';
 import { useTasks } from '../../../context/TaskContext';
 import MissionWizard from './MissionWizard';
 import MissionHistoryModal from './MissionHistoryModal';
-import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, Compass, Target, Heart, Clock, AlertCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+const ToastContext = createContext();
+
+function ToastProvider({ children }) {
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    return (
+        <ToastContext.Provider value={showToast}>
+            {children}
+            {toast && createPortal(
+                <div style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: toast.type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(16, 185, 129, 0.9)',
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                    zIndex: 9999,
+                    backdropFilter: 'blur(8px)',
+                    animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    maxWidth: '90vw',
+                    fontSize: '0.9rem',
+                    fontWeight: 500
+                }}>
+                    <AlertCircle size={20} />
+                    {toast.message}
+                </div>,
+                document.body
+            )}
+        </ToastContext.Provider>
+    );
+}
+
+function useToast() {
+    return useContext(ToastContext);
+}
 
 export default function MissionView() {
     const {
@@ -27,6 +76,28 @@ export default function MissionView() {
     }
 
     return (
+        <ToastProvider>
+            <MissionViewContent
+                rootMissions={rootMissions}
+                safeVisions={safeVisions}
+                safeValues={safeValues}
+                addMission={addMission}
+                addValue={addValue}
+                updateValue={updateValue}
+                deleteValue={deleteValue}
+                addVision={addVision}
+                updateVision={updateVision}
+                deleteVision={deleteVision}
+            />
+        </ToastProvider>
+    );
+}
+
+function MissionViewContent({
+    rootMissions, safeVisions, safeValues,
+    addMission, addValue, updateValue, deleteValue, addVision, updateVision, deleteVision
+}) {
+    return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', maxWidth: '1100px', margin: '0 auto' }}>
 
             {/* 1. HERO: Personal Mission Statement */}
@@ -37,7 +108,7 @@ export default function MissionView() {
                         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Your ultimate core purpose.</p>
                     </div>
                 </div>
-                
+
                 {rootMissions.length === 0 ? (
                     <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', borderRadius: 'var(--radius-lg)', borderStyle: 'dashed' }}>
                         <Target size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
@@ -54,7 +125,7 @@ export default function MissionView() {
             {/* 2. COMPASS: Values & Vision */}
             <section>
                 <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Compass size={22} className="text-primary" /> 
+                    <Compass size={22} className="text-primary" />
                     <span>Inner Compass</span>
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
@@ -86,8 +157,8 @@ export default function MissionView() {
                 </div>
             </section>
 
-             {/* 3. TRACKING: Progress */}
-             <MissionProgressSection values={safeValues} visions={safeVisions} />
+            {/* 3. TRACKING: Progress */}
+            <MissionProgressSection values={safeValues} visions={safeVisions} />
         </div>
     );
 }
@@ -96,7 +167,13 @@ function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, place
     const [isAdding, setIsAdding] = useState(false);
     const [newItemText, setNewItemText] = useState('');
 
+    const showToast = useToast();
+
     const handleAdd = () => {
+        if (newItemText.length > 100) {
+            showToast("Character limit exceeded! Max 100 characters allowed.");
+            return;
+        }
         if (newItemText.trim()) {
             onAdd(newItemText);
             setNewItemText('');
@@ -105,28 +182,28 @@ function ListSection({ title, icon, items = [], onAdd, onUpdate, onDelete, place
     };
 
     return (
-        <div className="glass-panel" style={{ 
-            padding: '0', 
-            borderRadius: 'var(--radius-lg)', 
-            display: 'flex', 
-            flexDirection: 'column', 
+        <div className="glass-panel" style={{
+            padding: '0',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+            flexDirection: 'column',
             height: '100%',
-            overflow: 'hidden' 
+            overflow: 'hidden'
         }}>
-            <div style={{ 
-                padding: '1.25rem', 
-                background: accentColor, 
+            <div style={{
+                padding: '1.25rem',
+                background: accentColor,
                 borderBottom: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center' 
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
             }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', margin: 0 }}>
                     {icon} {title}
                 </h3>
-                <button 
-                    className="btn btn-ghost" 
-                    onClick={() => setIsAdding(true)} 
+                <button
+                    className="btn btn-ghost"
+                    onClick={() => setIsAdding(true)}
                     style={{ background: 'rgba(255,255,255,0.1)', width: '32px', height: '32px', padding: 0, borderRadius: '50%' }}
                     title="Add Item"
                 >
@@ -170,7 +247,13 @@ function ListItem({ item, onUpdate, onDelete }) {
     const [isHovered, setIsHovered] = useState(false);
     const [text, setText] = useState(item.text);
 
+    const showToast = useToast();
+
     const handleSave = () => {
+        if (text.length > 100) {
+            showToast("Character limit exceeded! Max 100 characters allowed.");
+            return;
+        }
         onUpdate(item.id, text);
         setIsEditing(false);
     };
@@ -193,12 +276,12 @@ function ListItem({ item, onUpdate, onDelete }) {
     }
 
     return (
-        <div 
+        <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <span style={{ flex: 1, marginRight: '0.5rem' }}>{item.text}</span>
+            <span style={{ flex: 1, marginRight: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{item.text}</span>
             <div style={{ display: 'flex', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
                 <button className="btn btn-ghost" onClick={() => setIsEditing(true)} style={{ padding: '0.25rem' }}><Edit2 size={14} /></button>
                 <button className="btn btn-ghost" onClick={() => onDelete(item.id)} style={{ padding: '0.25rem', color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
@@ -217,12 +300,22 @@ function MissionCard({ mission, isRoot }) {
     const [isHovered, setIsHovered] = useState(false);
     const subMissions = getSubMissions(mission.id);
 
+    const showToast = useToast();
+
     const handleSave = () => {
+        if (editText.length > 100) {
+            showToast("Character limit exceeded! Max 100 characters allowed.");
+            return;
+        }
         updateMission(mission.id, editText);
         setIsEditing(false);
     };
 
     const handleAddChild = () => {
+        if (newRoleText.length > 100) {
+            showToast("Character limit exceeded! Max 100 characters allowed.");
+            return;
+        }
         if (newRoleText.trim()) {
             addMission(newRoleText, mission.id);
             setNewRoleText('');
@@ -239,8 +332,8 @@ function MissionCard({ mission, isRoot }) {
     if (!isRoot) {
         // Render as a Role Card
         return (
-            <div 
-                className="glass-panel" 
+            <div
+                className="glass-panel"
                 style={{
                     padding: '0.75rem',
                     borderRadius: 'var(--radius-md)',
@@ -254,8 +347,8 @@ function MissionCard({ mission, isRoot }) {
                 onMouseLeave={() => setIsHovered(false)}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontWeight: 600, fontSize: '1rem' }}>{mission.text}</div>
-                    <div style={{ display: 'flex', gap: '0.25rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                    <div style={{ fontWeight: 600, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, marginRight: '0.5rem' }}>{mission.text}</div>
+                    <div style={{ display: 'flex', gap: '0.25rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', flexShrink: 0 }}>
                         <button className="btn btn-ghost" onClick={() => {
                             const newText = prompt("Update Role name:", mission.text);
                             if (newText) updateMission(mission.id, newText);
@@ -279,8 +372,8 @@ function MissionCard({ mission, isRoot }) {
 
     // Root Mission Card
     return (
-        <div 
-            className="glass-panel" 
+        <div
+            className="glass-panel"
             style={{
                 padding: '2rem',
                 borderRadius: 'var(--radius-lg)',
@@ -289,12 +382,12 @@ function MissionCard({ mission, isRoot }) {
                 background: 'linear-gradient(to right, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.4))'
             }}
         >
-            <div 
+            <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                     {isEditing ? (
                         <div>
                             <textarea
@@ -310,14 +403,24 @@ function MissionCard({ mission, isRoot }) {
                     ) : (
                         <div>
                             <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Ultimate Objective</div>
-                            <div style={{ fontSize: '1.75rem', lineHeight: 1.3, fontWeight: 700, letterSpacing: '-0.5px' }}>
+                            <div style={{
+                                fontSize: '1.75rem',
+                                lineHeight: 1.3,
+                                fontWeight: 700,
+                                letterSpacing: '-0.5px',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                wordBreak: 'break-word'
+                            }}>
                                 {mission.text}
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', flexShrink: 0 }}>
                     <button className="btn btn-ghost" onClick={() => setShowHistory(true)} title="View History">
                         <Clock size={18} className="text-primary" />
                     </button>
@@ -332,28 +435,28 @@ function MissionCard({ mission, isRoot }) {
                 marginTop: '1.5rem',
                 paddingTop: '1.5rem',
                 borderTop: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex', 
-                flexDirection: 'column', 
+                display: 'flex',
+                flexDirection: 'column',
                 gap: '1rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <h4 style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>Roles & Key Areas</h4>
-                    <button 
-                        className="btn btn-ghost" 
-                        onClick={() => setIsAddingChild(true)} 
-                        style={{ 
-                            padding: '0.25rem', 
-                            height: '24px', 
-                            width: '24px', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                    <button
+                        className="btn btn-ghost"
+                        onClick={() => setIsAddingChild(true)}
+                        style={{
+                            padding: '0.25rem',
+                            height: '24px',
+                            width: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             borderRadius: '50%',
                             background: 'rgba(255,255,255,0.1)'
                         }}
                         title="Add Role"
                     >
-                        <Plus size={14} /> 
+                        <Plus size={14} />
                     </button>
                 </div>
 
@@ -369,7 +472,7 @@ function MissionCard({ mission, isRoot }) {
                             onKeyDown={e => e.key === 'Enter' && handleAddChild()}
                         />
                         <button className="btn btn-primary" onClick={handleAddChild} size="sm">Add</button>
-                        <button className="btn btn-ghost" onClick={() => setIsAddingChild(false)} size="sm"><X size={14}/></button>
+                        <button className="btn btn-ghost" onClick={() => setIsAddingChild(false)} size="sm"><X size={14} /></button>
                     </div>
                 )}
 
@@ -378,11 +481,11 @@ function MissionCard({ mission, isRoot }) {
                         <MissionCard key={sub.id} mission={sub} isRoot={false} />
                     ))}
                 </div>
-                
+
                 {subMissions.length === 0 && !isAddingChild && (
-                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '0.5rem 0' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '0.5rem 0' }}>
                         No roles defined yet. Click + to add.
-                     </div>
+                    </div>
                 )}
             </div>
         </div>
@@ -403,8 +506,8 @@ function MissionProgressSection({ values, visions }) {
         return (
             <div key={item.id} style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                    <span>{item.text}</span>
-                    <span style={{ color: 'var(--color-text-muted)' }}>{completed}/{total}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, marginRight: '1rem' }}>{item.text}</span>
+                    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>{completed}/{total}</span>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ width: `${pct}%`, height: '100%', background: 'var(--color-primary)', transition: 'width 0.5s' }} />
